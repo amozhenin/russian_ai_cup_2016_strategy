@@ -3,7 +3,7 @@ import model.*;
 import java.io.IOException;
 
 public final class RunnerCopy {
-    private final ModifiedRemoteProcessClient modifiedRemoteProcessClient;
+    private final RemoteProcessClient remoteProcessClient;
     private final String token;
 
     public static void main(String[] args) throws IOException {
@@ -11,16 +11,16 @@ public final class RunnerCopy {
     }
 
     private RunnerCopy(String[] args) throws IOException {
-        modifiedRemoteProcessClient = new ModifiedRemoteProcessClient(args[0], Integer.parseInt(args[1]));
+        remoteProcessClient = new RemoteProcessClient(args[0], Integer.parseInt(args[1]));
         token = args[2];
     }
 
     public void run() throws IOException {
         try {
-            modifiedRemoteProcessClient.writeToken(token);
-            modifiedRemoteProcessClient.writeProtocolVersion();
-            int teamSize = modifiedRemoteProcessClient.readTeamSize();
-            Game game = modifiedRemoteProcessClient.readGameContext();
+            remoteProcessClient.writeToken(token);
+            remoteProcessClient.writeProtocolVersion();
+            int teamSize = remoteProcessClient.readTeamSize();
+            Game game = remoteProcessClient.readGameContext();
 
             Strategy[] strategies = new Strategy[teamSize];
 
@@ -31,7 +31,7 @@ public final class RunnerCopy {
 
             PlayerContext playerContext;
 
-            while ((playerContext = modifiedRemoteProcessClient.readPlayerContext()) != null) {
+            while ((playerContext = remoteProcessClient.readPlayerContext()) != null) {
                 Wizard[] playerWizards = playerContext.getWizards();
                 if (playerWizards == null || playerWizards.length != teamSize) {
                     break;
@@ -49,10 +49,10 @@ public final class RunnerCopy {
                     );
                 }
 
-                modifiedRemoteProcessClient.writeMoves(moves);
+                remoteProcessClient.writeMoves(moves);
             }
         } finally {
-            modifiedRemoteProcessClient.close();
+            remoteProcessClient.close();
         }
     }
 }
