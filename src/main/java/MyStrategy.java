@@ -2,6 +2,7 @@ import model.*;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Random;
 
 public final class MyStrategy implements IExtendedStrategy {
 
@@ -57,6 +58,8 @@ public final class MyStrategy implements IExtendedStrategy {
         }
         storage.setObstacles(obstacles);
         storage.setZoneMapper(mapper);
+        Random random = new Random(game.getRandomSeed());
+        storage.setRandom(random);
     }
 
     private List<GameAction> generateActions(Wizard self, World world, Game game) {
@@ -66,15 +69,19 @@ public final class MyStrategy implements IExtendedStrategy {
         Zone zone = storage.getZoneMapper().getZoneOfUnit(self);
         if (storage.getLane() != null) {
             actions.add(new GameAction(Action.ADVANCE, new GameTarget(storage.getLane(), zone, size)));
+            actions.add(new GameAction(Action.HOLD, new GameTarget(storage.getLane(), zone, size)));
+            actions.add(new GameAction(Action.RETREAT, new GameTarget(storage.getLane(), zone, size)));
         } else {
             actions.add(new GameAction(Action.ADVANCE, new GameTarget(new Lane(LaneType.TOP), zone, size)));
             actions.add(new GameAction(Action.ADVANCE, new GameTarget(new Lane(LaneType.BOTTOM), zone, size)));
             actions.add(new GameAction(Action.ADVANCE, new GameTarget(new Lane(LaneType.MIDDLE), zone, size)));
         }
-        //world.getBuildings()
+
+        List<LivingUnit> foes = new ArrayList<>();
         for (Building building : world.getBuildings()) {
             if (isFoe(self.getFaction(), building)) {
                 actions.add(new GameAction(Action.ATTACK, new GameTarget(building)));
+                foes.add(building);
             }
         }
         for (Wizard wizard : world.getWizards()) {
@@ -83,13 +90,16 @@ public final class MyStrategy implements IExtendedStrategy {
             }
             if (isFoe(self.getFaction(), wizard)) {
                 actions.add(new GameAction(Action.ATTACK, new GameTarget(wizard)));
+                foes.add(wizard);
             }
         }
         for (Minion minion: world.getMinions()) {
             if (isFoe(self.getFaction(), minion)) {
                 actions.add(new GameAction(Action.ATTACK, new GameTarget(minion)));
+                foes.add(minion);
             }
         }
+        storage.setFoes(foes);
         return actions;
     }
 
@@ -150,6 +160,10 @@ public final class MyStrategy implements IExtendedStrategy {
                                 estimation = -50.0;
                             } else {
                                 estimation = 1.0;
+                                if (self.getLife() < self.getMaxLife() * 0.9)
+                                    estimation = 0.1;
+                                if (self.getLife() < self.getMaxLife() * 0.5)
+                                    estimation = -1.0;
                             }
                         }
                         break;
@@ -168,8 +182,30 @@ public final class MyStrategy implements IExtendedStrategy {
                 }
                 break;
             case HOLD:
+                if (storage.getLane().getType() != action.getGameTarget().getLane().getType()) {
+                    estimation = -50.0;
+                } else {
+                    estimation = 0.5;
+                    if (self.getLife() < self.getMaxLife() && self.getLife() > self.getMaxLife() * 0.8) {
+                        estimation = 1.0;
+                    }
+                    if (self.getLife() < self.getMaxLife() * 0.6) {
+                        estimation = 0.1;
+                    }
+                }
                 break;
             case RETREAT:
+                if (storage.getLane().getType() != action.getGameTarget().getLane().getType()) {
+                    estimation = -50.0;
+                } else {
+                    estimation = 0.0;
+                    if (self.getLife() < self.getMaxLife() * 0.9)
+                        estimation = 0.1;
+                    if (self.getLife() < self.getMaxLife() * 0.7)
+                        estimation = 1.0;
+                    if (self.getLife() < self.getMaxLife() * 0.5)
+                        estimation = 10.0;
+                }
                 break;
             case CAST_SPELL:
                 //not implemented
@@ -258,6 +294,8 @@ public final class MyStrategy implements IExtendedStrategy {
 
     private void tryApplyAction(EstimatedGameAction action, Wizard self, World world, Game game, Move move) {
         switch (action.getAction()) {
+            case HOLD:
+            case RETREAT:
             case ADVANCE:
                 //TODO learn to move
                 switch(action.getGameTarget().getTargetType()) {
@@ -302,7 +340,16 @@ public final class MyStrategy implements IExtendedStrategy {
                                 angle = correctedAngle;
                             }
                             move.setTurn(angle);
-                            move.setSpeed(game.getWizardForwardSpeed());
+                            if (action.getAction() == Action.ADVANCE)
+                                move.setSpeed(game.getWizardForwardSpeed());
+                            if (action.getAction() == Action.RETREAT)
+                                move.setSpeed(-game.getWizardBackwardSpeed());
+                            if (action.getAction() == Action.HOLD) {
+                                move.setSpeed(0);
+                                move.setStrafeSpeed(game.getWizardStrafeSpeed() * (storage.getRandom().nextInt() % 2 == 0 ? 1 : -1));
+                                move.setTurn(StrictMath.PI / 12 * (storage.getRandom().nextInt() % 2 == 0 ? 1 : -1));
+                            }
+
                         break;
                     case WIZARD:
                         break;
@@ -317,10 +364,7 @@ public final class MyStrategy implements IExtendedStrategy {
                     default:
                 }
                 break;
-            case HOLD:
-                break;
-            case RETREAT:
-                break;
+
             case ATTACK:
                 Unit target = action.getGameTarget().getTarget();
 
@@ -328,7 +372,8 @@ public final class MyStrategy implements IExtendedStrategy {
                 double dist = self.getDistanceTo(target);
                 if ((castAngle >= - StrictMath.PI / 12 && castAngle <= StrictMath.PI / 12)
                         && (self.getRemainingActionCooldownTicks() == 0)
-                        && (self.getRemainingCooldownTicksByAction()[ActionType.MAGIC_MISSILE.ordinal()] == 0)) {
+                        && (self.getRemainingCooldownTicksByAction()[ActionType.MAGIC_MISSILE.ordinal()] == 0)
+                        && dist < game.getWizardCastRange()) {
                     move.setAction(ActionType.MAGIC_MISSILE);
                     move.setCastAngle(castAngle);
                     move.setMinCastDistance(dist);
