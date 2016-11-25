@@ -371,13 +371,17 @@ public final class MyStrategy implements IExtendedStrategy {
                 double castAngle = self.getAngleTo(target);
                 double dist = self.getDistanceTo(target);
                 if ((castAngle >= - StrictMath.PI / 12 && castAngle <= StrictMath.PI / 12)
-                        && (self.getRemainingActionCooldownTicks() == 0)
-                        && (self.getRemainingCooldownTicksByAction()[ActionType.MAGIC_MISSILE.ordinal()] == 0)
-                        && dist < game.getWizardCastRange()) {
-                    move.setAction(ActionType.MAGIC_MISSILE);
-                    move.setCastAngle(castAngle);
-                    move.setMinCastDistance(dist);
-                    move.setMaxCastDistance(dist + 25);
+                        && (self.getRemainingActionCooldownTicks() == 0)) {
+                    if ((self.getRemainingCooldownTicksByAction()[ActionType.MAGIC_MISSILE.ordinal()] == 0)
+                            && dist < game.getWizardCastRange()) {
+                        move.setAction(ActionType.MAGIC_MISSILE);
+                        move.setCastAngle(castAngle);
+                        move.setMinCastDistance(dist);
+                        move.setMaxCastDistance(dist + 25);
+                    } else if ((self.getRemainingCooldownTicksByAction()[ActionType.STAFF.ordinal()] == 0)
+                        && dist < game.getStaffRange()) {
+                        move.setAction(ActionType.STAFF);
+                    }
                 } else {
                     move.setAction(ActionType.NONE);
                 }
