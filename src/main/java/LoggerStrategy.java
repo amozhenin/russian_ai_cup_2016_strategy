@@ -71,6 +71,9 @@ public class LoggerStrategy  implements IExtendedStrategy {
         sb.append("Forward speed = ").append(game.getWizardForwardSpeed());
         sb.append(", Backward speed = ").append(game.getWizardBackwardSpeed());
         sb.append(", Strafe speed = ").append(game.getWizardStrafeSpeed()).append("\n");
+        sb.append("Cast range = ").append(game.getWizardCastRange());
+        sb.append(", Staff range = ").append(game.getStaffRange());
+        sb.append(", Staff sector = ").append(game.getStaffSector()).append("\n");
     }
 
     private void logWizardInfo(StringBuilder sb, Wizard wizard) {
