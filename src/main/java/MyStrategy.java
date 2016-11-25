@@ -394,8 +394,10 @@ public final class MyStrategy implements IExtendedStrategy {
 
     public boolean isObstacle(Wizard self, double angle, CircularUnit obstacle) {
         double obstacleAngle = self.getAngleTo(obstacle);
+        double obstacleDist = self.getDistanceTo(obstacle);
         return (Math.abs(Math.sin(obstacleAngle - angle)) * self.getDistanceTo(obstacle) < self.getRadius() + obstacle.getRadius() + 3)
-                && (obstacleAngle - angle < StrictMath.PI / 2 && obstacleAngle - angle > - StrictMath.PI / 2);
+                && (obstacleAngle - angle < StrictMath.PI / 2 && obstacleAngle - angle > - StrictMath.PI / 2)
+                && (obstacleDist < self.getRadius() * 10);
     }
 }
 
