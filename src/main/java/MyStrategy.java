@@ -60,6 +60,7 @@ public final class MyStrategy implements IExtendedStrategy {
         storage.setZoneMapper(mapper);
         Random random = new Random(game.getRandomSeed());
         storage.setRandom(random);
+        storage.saveCoordinates(new Waypoint(self.getX(), self.getY()));
     }
 
     private List<GameAction> generateActions(Wizard self, World world, Game game) {
@@ -68,13 +69,13 @@ public final class MyStrategy implements IExtendedStrategy {
         double size = game.getMapSize();
         Zone zone = storage.getZoneMapper().getZoneOfUnit(self);
         if (storage.getLane() != null) {
-            actions.add(new GameAction(Action.ADVANCE, new GameTarget(storage.getLane(), zone, size)));
-            actions.add(new GameAction(Action.HOLD, new GameTarget(storage.getLane(), zone, size)));
-            actions.add(new GameAction(Action.RETREAT, new GameTarget(storage.getLane(), zone, size)));
+            actions.add(new GameAction(Action.ADVANCE, new GameTarget(storage.getLane(), zone, size, Action.ADVANCE)));
+            actions.add(new GameAction(Action.HOLD, new GameTarget(storage.getLane(), zone, size, Action.HOLD)));
+            actions.add(new GameAction(Action.RETREAT, new GameTarget(storage.getLane(), zone, size, Action.RETREAT)));
         } else {
-            actions.add(new GameAction(Action.ADVANCE, new GameTarget(new Lane(LaneType.TOP), zone, size)));
-            actions.add(new GameAction(Action.ADVANCE, new GameTarget(new Lane(LaneType.BOTTOM), zone, size)));
-            actions.add(new GameAction(Action.ADVANCE, new GameTarget(new Lane(LaneType.MIDDLE), zone, size)));
+            actions.add(new GameAction(Action.ADVANCE, new GameTarget(new Lane(LaneType.TOP), zone, size, Action.ADVANCE)));
+            actions.add(new GameAction(Action.ADVANCE, new GameTarget(new Lane(LaneType.BOTTOM), zone, size, Action.ADVANCE)));
+            actions.add(new GameAction(Action.ADVANCE, new GameTarget(new Lane(LaneType.MIDDLE), zone, size, Action.ADVANCE)));
         }
 
         List<LivingUnit> foes = new ArrayList<>();
@@ -164,6 +165,20 @@ public final class MyStrategy implements IExtendedStrategy {
                                     estimation = 0.1;
                                 if (self.getLife() < self.getMaxLife() * 0.5)
                                     estimation = -1.0;
+                                double dist = getDistanceToClosestFoe(self);
+                                if (dist > game.getFactionBaseAttackRange()) {
+                                    estimation += 1.5;
+                                } else if (dist > game.getScoreGainRange()) {
+                                    estimation += 1.1;
+                                } else if (dist > game.getWizardCastRange()) {
+                                    estimation += 1.0;
+                                } else if (dist > game.getFetishBlowdartAttackRange()) {
+                                    estimation -= 0.5;
+                                } else if (dist > 70) {
+                                    estimation -= 1.0;
+                                } else {
+                                    estimation -= 5.0;
+                                }
                             }
                         }
                         break;
@@ -192,6 +207,20 @@ public final class MyStrategy implements IExtendedStrategy {
                     if (self.getLife() < self.getMaxLife() * 0.6) {
                         estimation = 0.1;
                     }
+                    double dist = getDistanceToClosestFoe(self);
+                    if (dist > game.getFactionBaseAttackRange()) {
+                        estimation -= 5.0;
+                    } else if (dist > game.getScoreGainRange()) {
+                        estimation -= 2.0;
+                    } else if (dist > game.getWizardCastRange()) {
+                        estimation -= 1.0;
+                    } else if (dist > game.getFetishBlowdartAttackRange()) {
+                        estimation += 1.0;
+                    } else if (dist > 70) {
+                        estimation -= 1.0;
+                    } else {
+                        estimation -= 5.0;
+                    }
                 }
                 break;
             case RETREAT:
@@ -205,6 +234,20 @@ public final class MyStrategy implements IExtendedStrategy {
                         estimation = 1.0;
                     if (self.getLife() < self.getMaxLife() * 0.5)
                         estimation = 10.0;
+                    double dist = getDistanceToClosestFoe(self);
+                    if (dist > game.getFactionBaseAttackRange()) {
+                        estimation -= 20.0;
+                    } else if (dist > game.getScoreGainRange()) {
+                        estimation -= 10.0;
+                    } else if (dist > game.getWizardCastRange()) {
+                        estimation += 1.0;
+                    } else if (dist > game.getFetishBlowdartAttackRange()) {
+                        estimation += 1.5;
+                    } else if (dist > 70) {
+                        estimation += 5.0;
+                    } else {
+                        estimation += 25.0;
+                    }
                 }
                 break;
             case CAST_SPELL:
@@ -265,6 +308,21 @@ public final class MyStrategy implements IExtendedStrategy {
 
         }
         return new EstimatedGameAction(action.getAction(), action.getGameTarget(), estimation);
+    }
+
+    private double getDistanceToClosestFoe(Wizard self) {
+        double distance = 10000.0;
+        List<LivingUnit> foes = storage.getFoes();
+        for (LivingUnit foe : foes) {
+            if (foe.getFaction() == Faction.NEUTRAL) {
+                continue;
+            }
+           double foeDist = self.getDistanceTo(foe);
+           if (distance > foeDist) {
+               distance = foeDist;
+           }
+        }
+        return distance;
     }
 
     private List<EstimatedGameAction> selectActionsToDo(List<EstimatedGameAction> actions) {
@@ -340,10 +398,25 @@ public final class MyStrategy implements IExtendedStrategy {
                                 angle = correctedAngle;
                             }
                             move.setTurn(angle);
-                            if (action.getAction() == Action.ADVANCE)
+                            //if (action.getAction() == Action.ADVANCE)
                                 move.setSpeed(game.getWizardForwardSpeed());
-                            if (action.getAction() == Action.RETREAT)
-                                move.setSpeed(-game.getWizardBackwardSpeed());
+                                boolean stuck = true;
+                                Waypoint current = new Waypoint(self.getX(), self.getY());
+                                for(Waypoint wp : storage.getCoordinates()) {
+                                    if (wp.getX() != current.getX()) {
+                                        stuck = false;
+                                        break;
+                                    }
+                                    if (wp.getY() != current.getY()) {
+                                        stuck = false;
+                                        break;
+                                    }
+                                }
+                                if (stuck) {
+                                    move.setSpeed(-game.getWizardBackwardSpeed());
+                                }
+                           // if (action.getAction() == Action.RETREAT)
+                           //     move.setSpeed(-game.getWizardBackwardSpeed());
                             if (action.getAction() == Action.HOLD) {
                                 move.setSpeed(0);
                                 move.setStrafeSpeed(game.getWizardStrafeSpeed() * (storage.getRandom().nextInt() % 2 == 0 ? 1 : -1));
@@ -378,10 +451,10 @@ public final class MyStrategy implements IExtendedStrategy {
                         move.setCastAngle(castAngle);
                         move.setMinCastDistance(dist);
                         move.setMaxCastDistance(dist + 25);
-                    } else if ((self.getRemainingCooldownTicksByAction()[ActionType.STAFF.ordinal()] == 0)
-                        && dist < game.getStaffRange()) {
-                        move.setAction(ActionType.STAFF);
                     }
+                } else if ((self.getRemainingCooldownTicksByAction()[ActionType.STAFF.ordinal()] == 0)
+                        && dist < game.getStaffRange()) {
+                    move.setAction(ActionType.STAFF);
                 } else {
                     move.setAction(ActionType.NONE);
                 }

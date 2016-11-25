@@ -1,6 +1,7 @@
 import model.CircularUnit;
 import model.LivingUnit;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Random;
 
@@ -15,6 +16,7 @@ public class DataStorage {
 
     //Mutable data below
     private Lane lane;
+    private List<Waypoint> oldCoordinates = new ArrayList<>(5);
 
     //Tick data below
     private List<GameAction> actions;
@@ -85,5 +87,18 @@ public class DataStorage {
 
     public Random getRandom() {
         return random;
+    }
+
+    public void saveCoordinates(Waypoint point) {
+        if (oldCoordinates.size() < 5) {
+            oldCoordinates.add(point);
+        } else {
+            oldCoordinates.remove(0);
+            oldCoordinates.add(point);
+        }
+    }
+
+    public List<Waypoint> getCoordinates() {
+        return oldCoordinates;
     }
 }
