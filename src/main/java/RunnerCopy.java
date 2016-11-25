@@ -16,6 +16,7 @@ public final class RunnerCopy {
     }
 
     public void run() throws IOException {
+        DirtyStrategy ds = new DirtyStrategy();
         try {
             remoteProcessClient.writeToken(token);
             remoteProcessClient.writeProtocolVersion();
@@ -26,7 +27,7 @@ public final class RunnerCopy {
 
             for (int strategyIndex = 0; strategyIndex < teamSize; ++strategyIndex) {
 //                strategies[strategyIndex] = new MyStrategy();
-                strategies[strategyIndex] = new DirtyStrategy();
+                strategies[strategyIndex] = ds;
             }
 
             PlayerContext playerContext;
@@ -52,6 +53,7 @@ public final class RunnerCopy {
                 remoteProcessClient.writeMoves(moves);
             }
         } finally {
+            ds.finish();
             remoteProcessClient.close();
         }
     }

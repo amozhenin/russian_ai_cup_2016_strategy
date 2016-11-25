@@ -10,18 +10,25 @@ import java.io.IOException;
  */
 public class DirtyStrategy implements Strategy {
 
-    private Strategy myStrategy;
-    private Strategy loggerStrategy;
+    private IExtendedStrategy myStrategy;
+    private IExtendedStrategy loggerStrategy;
 
     public DirtyStrategy() throws IOException {
         System.out.println("Hello cruel world, this is dirty!");
         myStrategy = new MyStrategy();
+        DataStorage storage = myStrategy.getDataStorage();
         loggerStrategy = new LoggerStrategy();
+        loggerStrategy.setDataStorage(storage);
     }
 
     @Override
     public void move(Wizard self, World world, Game game, Move move) {
         myStrategy.move(self, world, game, move);
         loggerStrategy.move(self, world, game, move);
+    }
+
+    public void finish() {
+        myStrategy.finish();
+        loggerStrategy.finish();
     }
 }
