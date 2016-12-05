@@ -123,7 +123,6 @@ public final class MyStrategy implements IExtendedStrategy {
     }
 
     private EstimatedGameAction estimateAction(GameAction action, Wizard self, World world, Game game) {
-        //TODO write this very carefully
         double estimation = 0.0;
         switch (action.getAction()) {
             case ADVANCE:
@@ -355,7 +354,6 @@ public final class MyStrategy implements IExtendedStrategy {
             case HOLD:
             case RETREAT:
             case ADVANCE:
-                //TODO learn to move
                 switch(action.getGameTarget().getTargetType()) {
                     case LANE:
                             storage.setLane(action.getGameTarget().getLane());
@@ -364,7 +362,7 @@ public final class MyStrategy implements IExtendedStrategy {
 
                             List<CircularUnit> realObstacles = new ArrayList<>();
                             for (CircularUnit obstacle : storage.getObstacles()) {
-                                if (isObstacle(self, angle, obstacle)) {
+                                if (isObstacle(self, angle, obstacle, game.getMapSize())) {
                                     realObstacles.add(obstacle);
                                 }
                             }
@@ -391,7 +389,7 @@ public final class MyStrategy implements IExtendedStrategy {
                                 for(int i = 1; i <= 12; i++) {
                                     correctedAngle -= (StrictMath.PI * i * sign) / 18;
                                     sign = -sign;
-                                    if (!isObstacle(self, correctedAngle, nearest)) {
+                                    if (!isObstacle(self, correctedAngle, nearest, game.getMapSize())) {
                                         break;
                                     }
                                 }
@@ -440,6 +438,23 @@ public final class MyStrategy implements IExtendedStrategy {
 
             case ATTACK:
                 Unit target = action.getGameTarget().getTarget();
+                LivingUnit _target = null;
+                switch (action.getGameTarget().getTargetType()) {
+                    case WIZARD:
+                        _target = (Wizard)action.getGameTarget().getTarget();
+                        break;
+                    case MINION:
+                        _target = (Minion)action.getGameTarget().getTarget();
+                        break;
+                    case BUILDING:
+                        _target = (Building)action.getGameTarget().getTarget();
+                        break;
+                    case TREE:
+                        _target = (Tree)action.getGameTarget().getTarget();
+                        break;
+                    default:
+                        _target = null;
+                }
 
                 double castAngle = self.getAngleTo(target);
                 double dist = self.getDistanceTo(target);
@@ -449,8 +464,8 @@ public final class MyStrategy implements IExtendedStrategy {
                             && dist < game.getWizardCastRange()) {
                         move.setAction(ActionType.MAGIC_MISSILE);
                         move.setCastAngle(castAngle);
-                        move.setMinCastDistance(dist);
-                        move.setMaxCastDistance(dist + 25);
+                        move.setMinCastDistance(dist - _target.getRadius() + game.getMagicMissileRadius());
+                        move.setMaxCastDistance(dist + _target.getRadius());
                     }
                 } else if ((self.getRemainingCooldownTicksByAction()[ActionType.STAFF.ordinal()] == 0)
                         && dist < game.getStaffRange()) {
@@ -469,12 +484,23 @@ public final class MyStrategy implements IExtendedStrategy {
         }
     }
 
-    public boolean isObstacle(Wizard self, double angle, CircularUnit obstacle) {
+    public boolean isObstacle(Wizard self, double angle, CircularUnit obstacle, double mapSize) {
         double obstacleAngle = self.getAngleTo(obstacle);
         double obstacleDist = self.getDistanceTo(obstacle);
-        return (Math.abs(Math.sin(obstacleAngle - angle)) * self.getDistanceTo(obstacle) < self.getRadius() + obstacle.getRadius() + 3)
-                && (obstacleAngle - angle < StrictMath.PI / 2 && obstacleAngle - angle > - StrictMath.PI / 2)
-                && (obstacleDist < self.getRadius() * 10);
+        double testDist = Math.abs(Math.sin(obstacleAngle - angle)) * obstacleDist;
+        Waypoint t = new Waypoint(self.getX() + testDist * Math.cos(self.getAngle() + angle),
+                        self.getY() + testDist * Math.sin(self.getAngle() + angle));
+
+        //we doesn't consider far points as obstacles
+        if (obstacleDist >= self.getRadius() * 10) {
+            return false;
+        }
+        //this checks if we are out of map
+        if (t.getX() < 0.0 + self.getRadius() || t.getX() > mapSize - self.getRadius() || t.getY() < 0.0 + self.getRadius()|| t.getY() > mapSize - self.getRadius()) {
+            return true;
+        }
+        return (Math.abs(Math.sin(obstacleAngle - angle)) * obstacleDist < self.getRadius() + obstacle.getRadius() + 3)
+                && (obstacleAngle - angle < StrictMath.PI && obstacleAngle - angle > - StrictMath.PI);
     }
 }
 
