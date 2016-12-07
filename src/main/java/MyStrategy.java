@@ -101,6 +101,8 @@ public final class MyStrategy implements IExtendedStrategy {
             }
         }
         storage.setFoes(foes);
+        if (foes.isEmpty())
+            storage.setTarget(null);
         return actions;
     }
 
