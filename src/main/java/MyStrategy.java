@@ -267,7 +267,7 @@ public final class MyStrategy implements IExtendedStrategy {
                             if (unit.getLife() < game.getMagicMissileDirectDamage()) {
                                 estimation = game.getWizardEliminationScoreFactor() * unit.getMaxLife();
                             } else {
-                                double probability = Math.max(0.01, 100 + game.getMagicMissileDirectDamage() - unit.getLife());
+                                double probability = Math.max(0.01, (100 + game.getMagicMissileDirectDamage() - unit.getLife()) / 100.0);
                                 estimation = game.getWizardDamageScoreFactor() * game.getMagicMissileDirectDamage()
                                     + probability * game.getWizardEliminationScoreFactor() * unit.getMaxLife();
                             }
@@ -276,7 +276,7 @@ public final class MyStrategy implements IExtendedStrategy {
                             if (unit.getLife() < game.getMagicMissileDirectDamage()) {
                                 estimation = game.getMinionEliminationScoreFactor() * unit.getMaxLife();
                             } else {
-                                double probability = Math.max(0.01, 100 + game.getMagicMissileDirectDamage() - unit.getLife());
+                                double probability = Math.max(0.01, (100 + game.getMagicMissileDirectDamage() - unit.getLife()) / 100.0);
                                 estimation = game.getMinionDamageScoreFactor() * game.getMagicMissileDirectDamage()
                                         + probability * game.getMinionEliminationScoreFactor() * unit.getMaxLife();
                                 if (unit.getFaction() == Faction.NEUTRAL) {
@@ -292,7 +292,7 @@ public final class MyStrategy implements IExtendedStrategy {
                                     estimation += 1000.0;
                                 }
                             } else {
-                                double probability = Math.max(0.01, 100 + game.getMagicMissileDirectDamage() - unit.getLife());
+                                double probability = Math.max(0.01, (100 + game.getMagicMissileDirectDamage() - unit.getLife()) / 100.0);
                                 estimation = game.getBuildingDamageScoreFactor() * game.getMagicMissileDirectDamage()
                                         + probability * game.getBuildingEliminationScoreFactor() * unit.getMaxLife();
                                 if (building.getType() == BuildingType.FACTION_BASE) {
@@ -367,7 +367,7 @@ public final class MyStrategy implements IExtendedStrategy {
             move.setSpeed(game.getWizardBackwardSpeed() * Math.cos(storage.getDestinationAngle()));
             move.setStrafeSpeed(game.getWizardStrafeSpeed() * Math.sin(storage.getDestinationAngle()));
         } else {
-            move.setSpeed(game.getWizardForwardSpeed() * Math.cos(storage.getDestinationAngle()));
+            move.setSpeed(game.getWizardBackwardSpeed() * Math.cos(storage.getDestinationAngle()));
             move.setStrafeSpeed(game.getWizardStrafeSpeed() * Math.sin(storage.getDestinationAngle()));
         }
 
