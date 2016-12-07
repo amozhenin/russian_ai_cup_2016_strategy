@@ -160,9 +160,9 @@ public final class MyStrategy implements IExtendedStrategy {
                                 estimation = -50.0;
                             } else {
                                 estimation = 1.0;
-                                if (self.getLife() < self.getMaxLife() * 0.9)
+                                if (self.getLife() < self.getMaxLife() * 0.7)
                                     estimation = 0.1;
-                                if (self.getLife() < self.getMaxLife() * 0.5)
+                                if (self.getLife() < self.getMaxLife() * 0.4)
                                     estimation = -1.0;
                                 double dist = getDistanceToClosestFoe(self);
                                 if (dist > game.getFactionBaseAttackRange()) {
@@ -172,7 +172,7 @@ public final class MyStrategy implements IExtendedStrategy {
                                 } else if (dist > game.getWizardCastRange()) {
                                     estimation += 1.0;
                                 } else if (dist > game.getFetishBlowdartAttackRange()) {
-                                    estimation -= 0.5;
+                                    estimation += 0.5;
                                 } else if (dist > 70) {
                                     estimation -= 1.0;
                                 } else {
@@ -200,10 +200,10 @@ public final class MyStrategy implements IExtendedStrategy {
                     estimation = -50.0;
                 } else {
                     estimation = 0.5;
-                    if (self.getLife() < self.getMaxLife() && self.getLife() > self.getMaxLife() * 0.8) {
+                    if (self.getLife() < self.getMaxLife() && self.getLife() > self.getMaxLife() * 0.6) {
                         estimation = 1.0;
                     }
-                    if (self.getLife() < self.getMaxLife() * 0.6) {
+                    if (self.getLife() < self.getMaxLife() * 0.4) {
                         estimation = 0.1;
                     }
                     double dist = getDistanceToClosestFoe(self);
@@ -214,7 +214,7 @@ public final class MyStrategy implements IExtendedStrategy {
                     } else if (dist > game.getWizardCastRange()) {
                         estimation -= 1.0;
                     } else if (dist > game.getFetishBlowdartAttackRange()) {
-                        estimation += 1.0;
+                        estimation += 0.5;
                     } else if (dist > 70) {
                         estimation -= 1.0;
                     } else {
@@ -229,9 +229,9 @@ public final class MyStrategy implements IExtendedStrategy {
                     estimation = 0.0;
                     if (self.getLife() < self.getMaxLife() * 0.9)
                         estimation = 0.1;
-                    if (self.getLife() < self.getMaxLife() * 0.7)
+                    if (self.getLife() < self.getMaxLife() * 0.4)
                         estimation = 1.0;
-                    if (self.getLife() < self.getMaxLife() * 0.5)
+                    if (self.getLife() < self.getMaxLife() * 0.2)
                         estimation = 10.0;
                     double dist = getDistanceToClosestFoe(self);
                     if (dist > game.getFactionBaseAttackRange()) {
@@ -239,11 +239,11 @@ public final class MyStrategy implements IExtendedStrategy {
                     } else if (dist > game.getScoreGainRange()) {
                         estimation -= 10.0;
                     } else if (dist > game.getWizardCastRange()) {
-                        estimation += 1.0;
+                        estimation += 0.5;
                     } else if (dist > game.getFetishBlowdartAttackRange()) {
-                        estimation += 1.5;
+                        estimation += 1.0;
                     } else if (dist > 70) {
-                        estimation += 5.0;
+                        estimation += 10.0;
                     } else {
                         estimation += 25.0;
                     }
@@ -277,6 +277,9 @@ public final class MyStrategy implements IExtendedStrategy {
                                 double probability = Math.max(0.01, 100 + game.getMagicMissileDirectDamage() - unit.getLife());
                                 estimation = game.getMinionDamageScoreFactor() * game.getMagicMissileDirectDamage()
                                         + probability * game.getMinionEliminationScoreFactor() * unit.getMaxLife();
+                                if (unit.getFaction() == Faction.NEUTRAL) {
+                                    estimation = estimation / 2;
+                                }
                             }
                             break;
                         case BUILDING:
@@ -351,30 +354,49 @@ public final class MyStrategy implements IExtendedStrategy {
     }
 
     private void applyMove(Wizard self, World world, Game game, Move move) {
-        move.setTurn(storage.getDestinationAngle());
+        double angle;
+        if (storage.getTarget() != null) {
+            angle = storage.getTargetAngle();
+        } else {
+            angle = storage.getDestinationAngle();
+        }
+        move.setTurn(angle);
+        if (angle < -StrictMath.PI / 2 || angle > StrictMath.PI / 2) {
+            move.setSpeed(game.getWizardBackwardSpeed() * Math.cos(storage.getDestinationAngle()));
+            move.setStrafeSpeed(game.getWizardStrafeSpeed() * Math.sin(storage.getDestinationAngle()));
+        } else {
+            move.setSpeed(game.getWizardForwardSpeed() * Math.cos(storage.getDestinationAngle()));
+            move.setStrafeSpeed(game.getWizardStrafeSpeed() * Math.sin(storage.getDestinationAngle()));
+        }
+
+
         //if (action.getAction() == Action.ADVANCE)
-        move.setSpeed(game.getWizardForwardSpeed());
-        boolean stuck = true;
-        Waypoint current = new Waypoint(self.getX(), self.getY());
-        for(Waypoint wp : storage.getCoordinates()) {
-            if (wp.getX() != current.getX()) {
-                stuck = false;
-                break;
-            }
-            if (wp.getY() != current.getY()) {
-                stuck = false;
-                break;
-            }
-        }
-        if (stuck) {
-            move.setSpeed(-game.getWizardBackwardSpeed());
-        }
+//        move.setSpeed(game.getWizardForwardSpeed());
+//        boolean stuck = true;
+//        Waypoint current = new Waypoint(self.getX(), self.getY());
+//        for(Waypoint wp : storage.getCoordinates()) {
+//            if (wp.getX() != current.getX()) {
+//                stuck = false;
+//                break;
+//            }
+//            if (wp.getY() != current.getY()) {
+//                stuck = false;
+//                break;
+//            }
+//        }
+//        if (stuck) {
+//            move.setSpeed(-game.getWizardBackwardSpeed());
+//        }
         // if (action.getAction() == Action.RETREAT)
         //     move.setSpeed(-game.getWizardBackwardSpeed());
+//        if (storage.getAction() == Action.HOLD) {
+//            move.setSpeed(0);
+//            move.setStrafeSpeed(game.getWizardStrafeSpeed() * (storage.getRandom().nextInt() % 2 == 0 ? 1 : -1));
+//            move.setTurn(StrictMath.PI / 12 * (storage.getRandom().nextInt() % 2 == 0 ? 1 : -1));
+//        }
         if (storage.getAction() == Action.HOLD) {
             move.setSpeed(0);
-            move.setStrafeSpeed(game.getWizardStrafeSpeed() * (storage.getRandom().nextInt() % 2 == 0 ? 1 : -1));
-            move.setTurn(StrictMath.PI / 12 * (storage.getRandom().nextInt() % 2 == 0 ? 1 : -1));
+            move.setStrafeSpeed(0);
         }
 
         if (storage.getTarget() != null) {
