@@ -25,6 +25,12 @@ public class DataStorage {
     private List<CircularUnit> obstacles;
     private List<LivingUnit> foes;
 
+    private double destinationAngle;
+    private double targetAngle;
+    private double targetDistance;
+    private LivingUnit target;
+    private Action action;
+
     public void setGeneratedActions(List<GameAction> actions) {
         this.actions = actions;
     }
@@ -100,5 +106,45 @@ public class DataStorage {
 
     public List<Waypoint> getCoordinates() {
         return oldCoordinates;
+    }
+
+    public double getDestinationAngle() {
+        return this.destinationAngle;
+    }
+
+    public void setDestinationAngle(double destinationAngle) {
+        this.destinationAngle = destinationAngle;
+    }
+
+    public double getTargetAngle() {
+        return this.targetAngle;
+    }
+
+    public void setTargetAngle(double targetAngle) {
+        this.targetAngle = targetAngle;
+    }
+
+    public double getTargetDistance() {
+        return this.targetDistance;
+    }
+
+    public void setTargetDistance(double targetDistance) {
+        this.targetDistance = targetDistance;
+    }
+
+    public LivingUnit getTarget() {
+        return target;
+    }
+
+    public void setTarget(LivingUnit target) {
+        this.target = target;
+    }
+
+    public Action getAction() {
+        return action;
+    }
+
+    public void setAction(Action action) {
+        this.action = action;
     }
 }

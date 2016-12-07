@@ -347,6 +347,53 @@ public final class MyStrategy implements IExtendedStrategy {
                 tryApplyAction(action, self, world, game, move);
             }
         }
+        applyMove(self, world, game, move);
+    }
+
+    private void applyMove(Wizard self, World world, Game game, Move move) {
+        move.setTurn(storage.getDestinationAngle());
+        //if (action.getAction() == Action.ADVANCE)
+        move.setSpeed(game.getWizardForwardSpeed());
+        boolean stuck = true;
+        Waypoint current = new Waypoint(self.getX(), self.getY());
+        for(Waypoint wp : storage.getCoordinates()) {
+            if (wp.getX() != current.getX()) {
+                stuck = false;
+                break;
+            }
+            if (wp.getY() != current.getY()) {
+                stuck = false;
+                break;
+            }
+        }
+        if (stuck) {
+            move.setSpeed(-game.getWizardBackwardSpeed());
+        }
+        // if (action.getAction() == Action.RETREAT)
+        //     move.setSpeed(-game.getWizardBackwardSpeed());
+        if (storage.getAction() == Action.HOLD) {
+            move.setSpeed(0);
+            move.setStrafeSpeed(game.getWizardStrafeSpeed() * (storage.getRandom().nextInt() % 2 == 0 ? 1 : -1));
+            move.setTurn(StrictMath.PI / 12 * (storage.getRandom().nextInt() % 2 == 0 ? 1 : -1));
+        }
+
+        if (storage.getTarget() != null) {
+            if ((storage.getTargetAngle() >= -StrictMath.PI / 12 && storage.getTargetAngle() <= StrictMath.PI / 12)
+                    && (self.getRemainingActionCooldownTicks() == 0)) {
+                if ((self.getRemainingCooldownTicksByAction()[ActionType.MAGIC_MISSILE.ordinal()] == 0)
+                        && storage.getTargetDistance() < game.getWizardCastRange()) {
+                    move.setAction(ActionType.MAGIC_MISSILE);
+                    move.setCastAngle(storage.getTargetAngle());
+                    move.setMinCastDistance(storage.getTargetDistance() - storage.getTarget().getRadius() + game.getMagicMissileRadius());
+                    move.setMaxCastDistance(storage.getTargetDistance() + storage.getTarget().getRadius());
+                }
+            } else if ((self.getRemainingCooldownTicksByAction()[ActionType.STAFF.ordinal()] == 0)
+                    && storage.getTargetDistance() < game.getStaffRange()) {
+                move.setAction(ActionType.STAFF);
+            } else {
+                move.setAction(ActionType.NONE);
+            }
+        }
     }
 
     private void tryApplyAction(EstimatedGameAction action, Wizard self, World world, Game game, Move move) {
@@ -395,32 +442,8 @@ public final class MyStrategy implements IExtendedStrategy {
                                 }
                                 angle = correctedAngle;
                             }
-                            move.setTurn(angle);
-                            //if (action.getAction() == Action.ADVANCE)
-                                move.setSpeed(game.getWizardForwardSpeed());
-                                boolean stuck = true;
-                                Waypoint current = new Waypoint(self.getX(), self.getY());
-                                for(Waypoint wp : storage.getCoordinates()) {
-                                    if (wp.getX() != current.getX()) {
-                                        stuck = false;
-                                        break;
-                                    }
-                                    if (wp.getY() != current.getY()) {
-                                        stuck = false;
-                                        break;
-                                    }
-                                }
-                                if (stuck) {
-                                    move.setSpeed(-game.getWizardBackwardSpeed());
-                                }
-                           // if (action.getAction() == Action.RETREAT)
-                           //     move.setSpeed(-game.getWizardBackwardSpeed());
-                            if (action.getAction() == Action.HOLD) {
-                                move.setSpeed(0);
-                                move.setStrafeSpeed(game.getWizardStrafeSpeed() * (storage.getRandom().nextInt() % 2 == 0 ? 1 : -1));
-                                move.setTurn(StrictMath.PI / 12 * (storage.getRandom().nextInt() % 2 == 0 ? 1 : -1));
-                            }
-
+                            storage.setDestinationAngle(angle);
+                            storage.setAction(action.getAction());
                         break;
                     case WIZARD:
                         break;
@@ -458,21 +481,9 @@ public final class MyStrategy implements IExtendedStrategy {
 
                 double castAngle = self.getAngleTo(target);
                 double dist = self.getDistanceTo(target);
-                if ((castAngle >= - StrictMath.PI / 12 && castAngle <= StrictMath.PI / 12)
-                        && (self.getRemainingActionCooldownTicks() == 0)) {
-                    if ((self.getRemainingCooldownTicksByAction()[ActionType.MAGIC_MISSILE.ordinal()] == 0)
-                            && dist < game.getWizardCastRange()) {
-                        move.setAction(ActionType.MAGIC_MISSILE);
-                        move.setCastAngle(castAngle);
-                        move.setMinCastDistance(dist - _target.getRadius() + game.getMagicMissileRadius());
-                        move.setMaxCastDistance(dist + _target.getRadius());
-                    }
-                } else if ((self.getRemainingCooldownTicksByAction()[ActionType.STAFF.ordinal()] == 0)
-                        && dist < game.getStaffRange()) {
-                    move.setAction(ActionType.STAFF);
-                } else {
-                    move.setAction(ActionType.NONE);
-                }
+                storage.setTarget(_target);
+                storage.setTargetAngle(castAngle);
+                storage.setTargetDistance(dist);
                 break;
             case CAST_SPELL:
                 //TODO implement in Round 2
