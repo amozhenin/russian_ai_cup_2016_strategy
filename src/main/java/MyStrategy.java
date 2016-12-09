@@ -100,6 +100,10 @@ public final class MyStrategy implements IExtendedStrategy {
                 foes.add(minion);
             }
         }
+        for (Tree tree: world.getTrees()) {
+            actions.add(new GameAction(Action.ATTACK, new GameTarget(tree)));
+          //  foes.add(tree);
+        }
         storage.setFoes(foes);
         if (foes.isEmpty())
             storage.setTarget(null);
@@ -301,7 +305,7 @@ public final class MyStrategy implements IExtendedStrategy {
                             }
                             break;
                         case TREE:
-                            estimation = 0.1;
+                            estimation = 1.0 / self.getDistanceTo(action.getGameTarget().getTarget()) ;
                             break;
                         default:
                             estimation = 0.0;
@@ -367,8 +371,8 @@ public final class MyStrategy implements IExtendedStrategy {
             move.setSpeed(game.getWizardBackwardSpeed() * Math.cos(storage.getDestinationAngle()));
             move.setStrafeSpeed(game.getWizardStrafeSpeed() * Math.sin(storage.getDestinationAngle()));
         } else {
-            move.setSpeed(game.getWizardBackwardSpeed() * Math.cos(storage.getDestinationAngle()));
-            move.setStrafeSpeed(game.getWizardStrafeSpeed() * Math.sin(storage.getDestinationAngle()));
+            move.setSpeed(game.getWizardForwardSpeed() * Math.cos(storage.getDestinationAngle()));
+            move.setStrafeSpeed(game.getWizardForwardSpeed() * Math.sin(storage.getDestinationAngle()));
         }
 
 
