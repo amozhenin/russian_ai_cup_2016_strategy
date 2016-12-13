@@ -175,7 +175,7 @@ public final class MyStrategy implements IExtendedStrategy {
                                     estimation += 1.5;
                                 } else if (dist > game.getScoreGainRange()) {
                                     estimation += 1.1;
-                                } else if (dist > game.getWizardCastRange()) {
+                                } else if (dist > self.getCastRange()) {
                                     estimation += 1.0;
                                 } else if (dist > game.getFetishBlowdartAttackRange()) {
                                     estimation += 0.5;
@@ -217,7 +217,7 @@ public final class MyStrategy implements IExtendedStrategy {
                         estimation -= 5.0;
                     } else if (dist > game.getScoreGainRange()) {
                         estimation -= 2.0;
-                    } else if (dist > game.getWizardCastRange()) {
+                    } else if (dist > self.getCastRange()) {
                         estimation -= 1.0;
                     } else if (dist > game.getFetishBlowdartAttackRange()) {
                         estimation += 0.5;
@@ -244,7 +244,7 @@ public final class MyStrategy implements IExtendedStrategy {
                         estimation -= 20.0;
                     } else if (dist > game.getScoreGainRange()) {
                         estimation -= 10.0;
-                    } else if (dist > game.getWizardCastRange()) {
+                    } else if (dist > self.getCastRange()) {
                         estimation += 0.5;
                     } else if (dist > game.getFetishBlowdartAttackRange()) {
                         estimation += 1.0;
@@ -262,7 +262,7 @@ public final class MyStrategy implements IExtendedStrategy {
                 //not implemented
                 break;
             case ATTACK:
-                if (self.getDistanceTo(action.getGameTarget().getTarget()) > game.getWizardCastRange()) {
+                if (self.getDistanceTo(action.getGameTarget().getTarget()) > self.getCastRange()) {
                     estimation = 0.0;
                 } else {
                     LivingUnit unit = (LivingUnit) action.getGameTarget().getTarget();
@@ -271,7 +271,7 @@ public final class MyStrategy implements IExtendedStrategy {
                             if (unit.getLife() < game.getMagicMissileDirectDamage()) {
                                 estimation = game.getWizardEliminationScoreFactor() * unit.getMaxLife();
                             } else {
-                                double probability = Math.max(0.01, (100 + game.getMagicMissileDirectDamage() - unit.getLife()) / 100.0);
+                                double probability = Math.max(0.01, (unit.getMaxLife() + game.getMagicMissileDirectDamage() - unit.getLife()) / unit.getMaxLife());
                                 estimation = game.getWizardDamageScoreFactor() * game.getMagicMissileDirectDamage()
                                     + probability * game.getWizardEliminationScoreFactor() * unit.getMaxLife();
                             }
@@ -280,7 +280,7 @@ public final class MyStrategy implements IExtendedStrategy {
                             if (unit.getLife() < game.getMagicMissileDirectDamage()) {
                                 estimation = game.getMinionEliminationScoreFactor() * unit.getMaxLife();
                             } else {
-                                double probability = Math.max(0.01, (100 + game.getMagicMissileDirectDamage() - unit.getLife()) / 100.0);
+                                double probability = Math.max(0.01, (unit.getMaxLife() + game.getMagicMissileDirectDamage() - unit.getLife()) / unit.getMaxLife());
                                 estimation = game.getMinionDamageScoreFactor() * game.getMagicMissileDirectDamage()
                                         + probability * game.getMinionEliminationScoreFactor() * unit.getMaxLife();
                                 if (unit.getFaction() == Faction.NEUTRAL) {
@@ -293,14 +293,14 @@ public final class MyStrategy implements IExtendedStrategy {
                             if (unit.getLife() < game.getMagicMissileDirectDamage()) {
                                 estimation = game.getBuildingEliminationScoreFactor() * unit.getMaxLife();
                                 if (building.getType() == BuildingType.FACTION_BASE) {
-                                    estimation += 1000.0;
+                                    estimation += game.getVictoryScore();
                                 }
                             } else {
-                                double probability = Math.max(0.01, (100 + game.getMagicMissileDirectDamage() - unit.getLife()) / 100.0);
+                                double probability = Math.max(0.01, (unit.getMaxLife() + game.getMagicMissileDirectDamage() - unit.getLife()) / unit.getMaxLife());
                                 estimation = game.getBuildingDamageScoreFactor() * game.getMagicMissileDirectDamage()
                                         + probability * game.getBuildingEliminationScoreFactor() * unit.getMaxLife();
                                 if (building.getType() == BuildingType.FACTION_BASE) {
-                                    estimation += 1000.0 * probability;
+                                    estimation += game.getVictoryScore() * probability;
                                 }
                             }
                             break;
