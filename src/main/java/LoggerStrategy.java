@@ -75,7 +75,46 @@ public class LoggerStrategy  implements IExtendedStrategy {
         sb.append(", Staff range = ").append(game.getStaffRange());
         sb.append(", Staff sector = ").append(game.getStaffSector());
         sb.append(", Score gain range = ").append(game.getScoreGainRange()).append("\n");
-
+        sb.append("==Skills==\n").append("Range bonus = ").append(game.getRangeBonusPerSkillLevel());
+        sb.append(", Damage bonus = ").append(game.getMagicalDamageBonusPerSkillLevel());
+        sb.append(", Staff bonus = ").append(game.getStaffDamageBonusPerSkillLevel());
+        sb.append(", Move bonus = ").append(game.getMovementBonusFactorPerSkillLevel());
+        sb.append(", Damage absorption = ").append(game.getMagicalDamageAbsorptionPerSkillLevel()).append("\n");
+        sb.append("MM: mana = ").append(game.getMagicMissileManacost());
+        sb.append(", cooldown = ").append(game.getMagicMissileCooldownTicks());
+        sb.append(", damage = ").append(game.getMagicMissileDirectDamage()).append("\n");
+        sb.append("FrostBolt: mana = ").append(game.getFrostBoltManacost());
+        sb.append(", cooldown = ").append(game.getFrostBoltCooldownTicks());
+        sb.append(", damage = ").append(game.getFrostBoltDirectDamage()).append("\n");
+        sb.append("FireBall: mana = ").append(game.getFireballManacost());
+        sb.append(", cooldown = ").append(game.getFireballCooldownTicks());
+        sb.append(", max damage = ").append(game.getFireballExplosionMaxDamage());
+        sb.append(", min damage = ").append(game.getFireballExplosionMinDamage());
+        sb.append(", max range = ").append(game.getFireballExplosionMaxDamageRange());
+        sb.append(", min range = ").append(game.getFireballExplosionMinDamageRange()).append("\n");
+        sb.append("Haste: mana = ").append(game.getHasteManacost());
+        sb.append(", cooldown = ").append(game.getHasteCooldownTicks());
+        sb.append(", duration = ").append(game.getHastenedDurationTicks()).append("\n");
+        sb.append("Shield: mana = ").append(game.getShieldManacost());
+        sb.append(", cooldown = ").append(game.getShieldCooldownTicks());
+        sb.append(", duration = ").append(game.getShieldedDurationTicks()).append("\n");
+        sb.append("==Statuses==\n").append("Burning: duration = ").append(game.getBurningDurationTicks());
+        sb.append(", total damage = ").append(game.getBurningSummaryDamage()).append("\n");
+        sb.append("Empowered: duration = ").append(game.getEmpoweredDurationTicks());
+        sb.append(", damage factor = ").append(game.getEmpoweredDamageFactor()).append("\n");
+        sb.append("Frozen: duration = ").append(game.getFrozenDurationTicks()).append("\n");
+        sb.append("Hastened: duration = ").append(game.getHastenedDurationTicks());
+        sb.append(", bonus duration = ").append(game.getHastenedBonusDurationFactor());
+        sb.append(", move bonus = ").append(game.getHastenedMovementBonusFactor());
+        sb.append(", rotation bonus = ").append(game.getHastenedRotationBonusFactor()).append("\n");
+        sb.append("Shielded: duration = ").append(game.getShieldedDurationTicks());
+        sb.append(", bonus duration = ").append(game.getShieldedBonusDurationFactor());
+        sb.append(", damage absorbtion = ").append(game.getShieldedDirectDamageAbsorptionFactor()).append("\n");
+        sb.append("==Levels==\n");
+        int[] xp = game.getLevelUpXpValues();
+        for (int i = 0; i < xp.length; i++) {
+            sb.append(i).append("  ").append(xp[i]).append("\n");
+        }
     }
 
     private void logWizardInfo(StringBuilder sb, Wizard wizard) {
