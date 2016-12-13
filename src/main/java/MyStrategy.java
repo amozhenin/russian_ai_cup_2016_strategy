@@ -107,6 +107,9 @@ public final class MyStrategy implements IExtendedStrategy {
         storage.setFoes(foes);
         if (foes.isEmpty())
             storage.setTarget(null);
+        if (game.isSkillsEnabled()) {
+            actions.add(new GameAction(Action.LEARN_SKILL, new GameTarget()));
+        }
         return actions;
     }
 
@@ -260,6 +263,10 @@ public final class MyStrategy implements IExtendedStrategy {
                 break;
             case TAKE_BONUS:
                 //not implemented
+                break;
+            case LEARN_SKILL:
+                //TODO implement
+                estimation = -1.0;
                 break;
             case ATTACK:
                 if (self.getDistanceTo(action.getGameTarget().getTarget()) > self.getCastRange()) {
@@ -518,6 +525,9 @@ public final class MyStrategy implements IExtendedStrategy {
                 break;
             case TAKE_BONUS:
                 //TODO learn to take bonuses
+                break;
+            case LEARN_SKILL:
+                //TODO implement
                 break;
             default:
         }

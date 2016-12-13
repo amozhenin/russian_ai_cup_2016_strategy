@@ -7,5 +7,6 @@ public enum Action {
     RETREAT,
     HOLD,
     TAKE_BONUS,
-    CAST_SPELL
+    CAST_SPELL,
+    LEARN_SKILL
 }

@@ -7,5 +7,6 @@ public enum TargetType {
     MINION,
     TREE,
     BONUS,
-    LANE
+    LANE,
+    SKILL
 }

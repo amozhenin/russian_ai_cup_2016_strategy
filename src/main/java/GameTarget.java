@@ -39,6 +39,12 @@ public class GameTarget {
         lane = null;
     }
 
+    public GameTarget() {
+        type = TargetType.SKILL;
+        lane = null;
+        target = null;
+    }
+
     public GameTarget(Lane lane, Zone zone, double size, Action action) {
         type = TargetType.LANE;
         this.lane = lane;

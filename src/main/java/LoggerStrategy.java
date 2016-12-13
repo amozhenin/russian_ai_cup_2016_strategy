@@ -239,20 +239,28 @@ public class LoggerStrategy  implements IExtendedStrategy {
         sb.append(action.getAction()).append(" ");
         sb.append(action.getEstimation()).append(" ");
         sb.append(action.getGameTarget().getTargetType());
-        if (action.getGameTarget().getTargetType() == TargetType.LANE) {
-            sb.append(" ").append(action.getGameTarget().getLane().getType());
+        if (action.getAction() != Action.LEARN_SKILL) {
+            if (action.getGameTarget().getTargetType() == TargetType.LANE) {
+                sb.append(" ").append(action.getGameTarget().getLane().getType());
+            }
+            sb.append(" [").append(action.getGameTarget().getTarget().getX()).append(",");
+            sb.append(action.getGameTarget().getTarget().getY()).append("]\n");
+        } else {
+            sb.append("\n");
         }
-        sb.append(" [").append(action.getGameTarget().getTarget().getX()).append(",");
-        sb.append(action.getGameTarget().getTarget().getY()).append("]\n");
     }
 
     private void logAction(StringBuilder sb, GameAction action) {
         sb.append(action.getAction()).append(" ").append(action.getGameTarget().getTargetType());
-        if (action.getGameTarget().getTargetType() == TargetType.LANE) {
-            sb.append(" ").append(action.getGameTarget().getLane().getType());
+        if (action.getAction() != Action.LEARN_SKILL) {
+            if (action.getGameTarget().getTargetType() == TargetType.LANE) {
+                sb.append(" ").append(action.getGameTarget().getLane().getType());
+            }
+            sb.append(" [").append(action.getGameTarget().getTarget().getX()).append(",");
+            sb.append(action.getGameTarget().getTarget().getY()).append("]\n");
+        } else {
+            sb.append("\n");
         }
-        sb.append(" [").append(action.getGameTarget().getTarget().getX()).append(",");
-        sb.append(action.getGameTarget().getTarget().getY()).append("]\n");
     }
 
     private void logData(StringBuilder sb) {
