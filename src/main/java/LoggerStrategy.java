@@ -239,27 +239,27 @@ public class LoggerStrategy  implements IExtendedStrategy {
         sb.append(action.getAction()).append(" ");
         sb.append(action.getEstimation()).append(" ");
         sb.append(action.getGameTarget().getTargetType());
-        if (action.getAction() != Action.LEARN_SKILL) {
-            if (action.getGameTarget().getTargetType() == TargetType.LANE) {
-                sb.append(" ").append(action.getGameTarget().getLane().getType());
-            }
+        if (action.getGameTarget().getTargetType() == TargetType.LANE) {
+            sb.append(" ").append(action.getGameTarget().getLane().getType());
+        }
+        if (action.getGameTarget().getTargetType() == TargetType.SKILL) {
+            sb.append(" ").append(action.getGameTarget().getSkill()).append("\n");
+        } else {
             sb.append(" [").append(action.getGameTarget().getTarget().getX()).append(",");
             sb.append(action.getGameTarget().getTarget().getY()).append("]\n");
-        } else {
-            sb.append("\n");
         }
     }
 
     private void logAction(StringBuilder sb, GameAction action) {
         sb.append(action.getAction()).append(" ").append(action.getGameTarget().getTargetType());
-        if (action.getAction() != Action.LEARN_SKILL) {
-            if (action.getGameTarget().getTargetType() == TargetType.LANE) {
-                sb.append(" ").append(action.getGameTarget().getLane().getType());
-            }
+        if (action.getGameTarget().getTargetType() == TargetType.LANE) {
+            sb.append(" ").append(action.getGameTarget().getLane().getType());
+        }
+        if (action.getGameTarget().getTargetType() == TargetType.SKILL) {
+            sb.append(" ").append(action.getGameTarget().getSkill()).append("\n");
+        } else {
             sb.append(" [").append(action.getGameTarget().getTarget().getX()).append(",");
             sb.append(action.getGameTarget().getTarget().getY()).append("]\n");
-        } else {
-            sb.append("\n");
         }
     }
 

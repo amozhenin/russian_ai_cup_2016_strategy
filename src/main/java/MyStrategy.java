@@ -1,6 +1,7 @@
 import model.*;
 
 import java.util.ArrayList;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Random;
 
@@ -10,6 +11,38 @@ public final class MyStrategy implements IExtendedStrategy {
 
     public MyStrategy() {
         storage = new DataStorage();
+        init();
+    }
+
+    private void init() {
+        //init skills
+        List<SkillType> skills = storage.getDesiredSkills();
+        skills.add(SkillType.RANGE_BONUS_PASSIVE_1);
+        skills.add(SkillType.RANGE_BONUS_AURA_1);
+        skills.add(SkillType.RANGE_BONUS_PASSIVE_2);
+        skills.add(SkillType.RANGE_BONUS_AURA_2);
+        skills.add(SkillType.ADVANCED_MAGIC_MISSILE);
+        skills.add(SkillType.MAGICAL_DAMAGE_BONUS_PASSIVE_1);
+        skills.add(SkillType.MAGICAL_DAMAGE_BONUS_AURA_1);
+        skills.add(SkillType.MAGICAL_DAMAGE_BONUS_PASSIVE_2);
+        skills.add(SkillType.MAGICAL_DAMAGE_BONUS_AURA_2);
+        skills.add(SkillType.FROST_BOLT);
+        skills.add(SkillType.MAGICAL_DAMAGE_ABSORPTION_PASSIVE_1);
+        skills.add(SkillType.MAGICAL_DAMAGE_ABSORPTION_AURA_1);
+        skills.add(SkillType.MAGICAL_DAMAGE_ABSORPTION_PASSIVE_2);
+        skills.add(SkillType.MAGICAL_DAMAGE_ABSORPTION_AURA_2);
+        skills.add(SkillType.SHIELD);
+        skills.add(SkillType.MOVEMENT_BONUS_FACTOR_PASSIVE_1);
+        skills.add(SkillType.MOVEMENT_BONUS_FACTOR_AURA_1);
+        skills.add(SkillType.MOVEMENT_BONUS_FACTOR_PASSIVE_2);
+        skills.add(SkillType.MOVEMENT_BONUS_FACTOR_AURA_2);
+        skills.add(SkillType.HASTE);
+        skills.add(SkillType.STAFF_DAMAGE_BONUS_PASSIVE_1);
+        skills.add(SkillType.STAFF_DAMAGE_BONUS_AURA_1);
+        skills.add(SkillType.STAFF_DAMAGE_BONUS_PASSIVE_2);
+        skills.add(SkillType.STAFF_DAMAGE_BONUS_AURA_2);
+        skills.add(SkillType.FIREBALL);
+        storage.setDesiredSkills(skills);
     }
 
     @Override
@@ -60,6 +93,22 @@ public final class MyStrategy implements IExtendedStrategy {
         storage.setZoneMapper(mapper);
         Random random = new Random(game.getRandomSeed());
         storage.setRandom(random);
+        List<SkillType> skills = storage.getDesiredSkills();
+        SkillType[] learnedSkills = self.getSkills();
+        Iterator<SkillType> skillIterator = skills.iterator();
+        while(skillIterator.hasNext()) {
+            SkillType skillToCheck = skillIterator.next();
+            boolean found = false;
+            for (SkillType skill : learnedSkills) {
+                if (skill == skillToCheck) {
+                    found = true;
+                    break;
+                }
+            }
+            if (found) {
+                skillIterator.remove();
+            }
+        }
         storage.saveCoordinates(new Waypoint(self.getX(), self.getY()));
     }
 
@@ -108,7 +157,9 @@ public final class MyStrategy implements IExtendedStrategy {
         if (foes.isEmpty())
             storage.setTarget(null);
         if (game.isSkillsEnabled()) {
-            actions.add(new GameAction(Action.LEARN_SKILL, new GameTarget()));
+            for (SkillType skill: storage.getDesiredSkills()) {
+                actions.add(new GameAction(Action.LEARN_SKILL, new GameTarget(skill)));
+            }
         }
         return actions;
     }
@@ -265,8 +316,27 @@ public final class MyStrategy implements IExtendedStrategy {
                 //not implemented
                 break;
             case LEARN_SKILL:
-                //TODO implement
-                estimation = -1.0;
+                SkillType skillCandidate = action.getGameTarget().getSkill();
+                boolean found = false;
+                for (SkillType skill : self.getSkills()) {
+                    if (skill == skillCandidate) {
+                        found = true;
+                        break;
+                    }
+                }
+                if (found) {
+                    estimation = -5.0;
+                } else {
+                    if (skillCandidate != storage.getDesiredSkills().get(0)) {
+                        estimation = -3.0;
+                    } else {
+                        if (self.getLevel() > self.getSkills().length) {
+                            estimation = 1.0;
+                        } else {
+                            estimation = -1.0;
+                        }
+                    }
+                }
                 break;
             case ATTACK:
                 if (self.getDistanceTo(action.getGameTarget().getTarget()) > self.getCastRange()) {
@@ -351,6 +421,8 @@ public final class MyStrategy implements IExtendedStrategy {
                              || a.getAction() == Action.RETREAT
                              || a.getAction() == Action.TAKE_BONUS).reduce((a, b) ->
                 a.getEstimation() > b.getEstimation() ? a : b).ifPresent(e -> bestActions.add(e));
+        actions.stream().filter(a -> a.getAction() == Action.LEARN_SKILL).reduce((a, b) ->
+                a.getEstimation() > b.getEstimation() ? a : b).ifPresent(e -> bestActions.add(e));
         return bestActions;
     }
 
@@ -416,7 +488,7 @@ public final class MyStrategy implements IExtendedStrategy {
             if ((storage.getTargetAngle() >= -StrictMath.PI / 12 && storage.getTargetAngle() <= StrictMath.PI / 12)
                     && (self.getRemainingActionCooldownTicks() == 0)) {
                 if ((self.getRemainingCooldownTicksByAction()[ActionType.MAGIC_MISSILE.ordinal()] == 0)
-                        && storage.getTargetDistance() < game.getWizardCastRange()) {
+                        && storage.getTargetDistance() < self.getCastRange()) {
                     move.setAction(ActionType.MAGIC_MISSILE);
                     move.setCastAngle(storage.getTargetAngle());
                     move.setMinCastDistance(storage.getTargetDistance() - storage.getTarget().getRadius() + game.getMagicMissileRadius());
@@ -527,7 +599,7 @@ public final class MyStrategy implements IExtendedStrategy {
                 //TODO learn to take bonuses
                 break;
             case LEARN_SKILL:
-                //TODO implement
+                move.setSkillToLearn(action.getGameTarget().getSkill());
                 break;
             default:
         }

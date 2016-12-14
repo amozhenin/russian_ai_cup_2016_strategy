@@ -1,5 +1,6 @@
 import model.CircularUnit;
 import model.LivingUnit;
+import model.SkillType;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -17,6 +18,7 @@ public class DataStorage {
     //Mutable data below
     private Lane lane;
     private List<Waypoint> oldCoordinates = new ArrayList<>(5);
+    private List<SkillType> desiredSkills = new ArrayList<>(25);
 
     //Tick data below
     private List<GameAction> actions;
@@ -146,5 +148,13 @@ public class DataStorage {
 
     public void setAction(Action action) {
         this.action = action;
+    }
+
+    public List<SkillType> getDesiredSkills() {
+        return this.desiredSkills;
+    }
+
+    public void setDesiredSkills(List<SkillType> desiredSkills) {
+        this.desiredSkills = desiredSkills;
     }
 }

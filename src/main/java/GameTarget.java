@@ -8,45 +8,53 @@ public class GameTarget {
     private final TargetType type;
     private final Unit target;
     private final Lane lane;
+    private final SkillType skill;
 
     public GameTarget(Building building) {
         type = TargetType.BUILDING;
         target = building;
         lane = null;
+        skill = null;
     }
 
     public GameTarget(Wizard wizard) {
         type = TargetType.WIZARD;
         target = wizard;
         lane = null;
+        skill = null;
     }
 
     public GameTarget(Minion minion) {
         type = TargetType.MINION;
         target = minion;
         lane = null;
+        skill = null;
     }
 
     public GameTarget(Tree tree) {
         type = TargetType.TREE;
         target = tree;
         lane = null;
+        skill = null;
     }
 
     public GameTarget(Bonus bonus) {
         type = TargetType.BONUS;
         target = bonus;
         lane = null;
+        skill = null;
     }
 
-    public GameTarget() {
+    public GameTarget(SkillType skill) {
         type = TargetType.SKILL;
         lane = null;
         target = null;
+        this.skill = skill;
     }
 
     public GameTarget(Lane lane, Zone zone, double size, Action action) {
         type = TargetType.LANE;
+        skill = null;
         this.lane = lane;
         Waypoint w1;
         Waypoint w2 = new Waypoint(size - size / 10, size / 10);
@@ -246,5 +254,9 @@ public class GameTarget {
 
     public Lane getLane() {
         return lane;
+    }
+
+    public SkillType getSkill() {
+        return this.skill;
     }
 }
