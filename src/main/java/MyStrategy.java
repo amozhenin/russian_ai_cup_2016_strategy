@@ -515,15 +515,19 @@ public final class MyStrategy implements IExtendedStrategy {
                             double angle = self.getAngleTo(target);
 
                             List<CircularUnit> realObstacles = new ArrayList<>();
+                            List<CircularUnit> nearObstacles = new ArrayList<>();
                             for (CircularUnit obstacle : storage.getObstacles()) {
-                                if (isObstacle(self, angle, obstacle, game.getMapSize())) {
+                                if (isObstacle(self, obstacle)) {
                                     realObstacles.add(obstacle);
+                                }
+                                if (isNearObstacle(self, obstacle)) {
+                                    nearObstacles.add(obstacle);
                                 }
                             }
                             CircularUnit nearest = null;
                             double distance = 8000.0;
                             for (CircularUnit realObstacle : realObstacles) {
-                                double obsDist = self.getDistanceTo(realObstacle);
+                                double obsDist = self.getDistanceTo(realObstacle) - self.getRadius() - realObstacle.getRadius();
                                 if (obsDist < distance) {
                                     distance = obsDist;
                                     nearest = realObstacle;
@@ -540,14 +544,26 @@ public final class MyStrategy implements IExtendedStrategy {
                                     }
                                 }
                                 double correctedAngle = angle;
-                                for(int i = 1; i <= 12; i++) {
-                                    correctedAngle -= (StrictMath.PI * i * sign) / 18;
+                                boolean found = false;
+                                for(int i = 1; i <= 200; i++) {
+                                    correctedAngle -= (StrictMath.PI * i * sign) / 180;
                                     sign = -sign;
-                                    if (!isObstacle(self, correctedAngle, nearest, game.getMapSize())) {
+                                    if (isObstacleForAngle(self, correctedAngle, nearest, game.getMapSize())) {
+                                        continue;
+                                    }
+                                    found = true;
+                                    for (CircularUnit near : nearObstacles) {
+                                        if (isObstacleForAngle(self, correctedAngle, near, game.getMapSize())) {
+                                            found = false;
+                                        }
+                                    }
+                                    if (found) {
                                         break;
                                     }
                                 }
-                                angle = correctedAngle;
+                                if (found) {
+                                    angle = correctedAngle;
+                                }
                             }
                             storage.setDestinationAngle(angle);
                             storage.setAction(action.getAction());
@@ -605,7 +621,15 @@ public final class MyStrategy implements IExtendedStrategy {
         }
     }
 
-    public boolean isObstacle(Wizard self, double angle, CircularUnit obstacle, double mapSize) {
+    public boolean isObstacle(Wizard self, CircularUnit obstacleCandidate) {
+        return self.getDistanceTo(obstacleCandidate) < self.getRadius() * 10;
+    }
+
+    public boolean isNearObstacle(Wizard self, CircularUnit obstacleCandidate) {
+        return self.getDistanceTo(obstacleCandidate) - self.getRadius() - obstacleCandidate.getRadius() < self.getRadius();
+    }
+
+    public boolean isObstacleForAngle(Wizard self, double angle, CircularUnit obstacle, double mapSize) {
         double obstacleAngle = self.getAngleTo(obstacle);
         double obstacleDist = self.getDistanceTo(obstacle);
         double testDist = Math.abs(Math.sin(obstacleAngle - angle)) * obstacleDist;
