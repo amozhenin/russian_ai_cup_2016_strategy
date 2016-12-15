@@ -119,12 +119,21 @@ public class LoggerStrategy  implements IExtendedStrategy {
 
     private void logWizardInfo(StringBuilder sb, Wizard wizard) {
         sb.append("===Wizard===\n").append("Owner id = ").append(wizard.getOwnerPlayerId());
+        sb.append(", Id = ").append(wizard.getId());
         sb.append(", Master = ").append(wizard.isMaster());
         sb.append(", Me = ").append(wizard.isMe());
+        sb.append(", Faction = ").append(wizard.getFaction());
+        sb.append(", Life = ").append(wizard.getLife()).append("/").append(wizard.getMaxLife());
+        sb.append(", Mana = ").append(wizard.getMana()).append("/").append(wizard.getMaxMana());
+        sb.append(", Level = ").append(wizard.getLevel());
+        sb.append(", Cast range = ").append(wizard.getCastRange());
+        sb.append(", Skills = ");
+        for (SkillType skill : wizard.getSkills()) {
+            sb.append(" | ").append(skill.toString());
+        }
         sb.append(", Vision range = ").append(wizard.getVisionRange());
         sb.append(", Radius = ").append(wizard.getRadius());
-        sb.append(", Faction = ").append(wizard.getFaction());
-        sb.append(", Id = ").append(wizard.getId()).append("\n");
+        sb.append("\n");
     }
 
     private void logWorldInfo(StringBuilder sb, World world) {
@@ -183,13 +192,22 @@ public class LoggerStrategy  implements IExtendedStrategy {
         sb.append("Wizards:\n");
         for(Wizard wizard : world.getWizards()) {
             if (!wizard.isMe()) {
-                sb.append("Faction = ").append(wizard.getFaction());
+                sb.append("Owner id = ").append(wizard.getOwnerPlayerId());
                 sb.append(", Id = ").append(wizard.getId());
-                sb.append(", Owner = ").append(wizard.getOwnerPlayerId());
+                sb.append(", Master = ").append(wizard.isMaster());
+                sb.append(", Me = ").append(wizard.isMe());
+                sb.append(", Faction = ").append(wizard.getFaction());
+                sb.append(", Life = ").append(wizard.getLife()).append("/").append(wizard.getMaxLife());
+                sb.append(", Mana = ").append(wizard.getMana()).append("/").append(wizard.getMaxMana());
                 sb.append(", Level = ").append(wizard.getLevel());
-                sb.append(", Life = ").append(wizard.getLife());
-                sb.append(", Mana = ").append(wizard.getMana());
-                sb.append(", [").append(wizard.getX()).append(", ").append(wizard.getY()).append("]\n");
+                sb.append(", Cast range = ").append(wizard.getCastRange());
+                sb.append(", Skills = ");
+                for (SkillType skill : wizard.getSkills()) {
+                    sb.append(" | ").append(skill.toString());
+                }
+                sb.append(", [").append(wizard.getX()).append(", ").append(wizard.getY());
+                sb.append(", Vision range = ").append(wizard.getVisionRange());
+                sb.append(", Radius = ").append(wizard.getRadius()).append("]\n");
             }
         }
 
@@ -242,6 +260,10 @@ public class LoggerStrategy  implements IExtendedStrategy {
         if (action.getGameTarget().getTargetType() == TargetType.LANE) {
             sb.append(" ").append(action.getGameTarget().getLane().getType());
         }
+        if (action.getAction() == Action.ATTACK) {
+            LivingUnit target = (LivingUnit)action.getGameTarget().getTarget();
+            sb.append(" ").append(target.getLife()).append("/").append(target.getMaxLife());
+        }
         if (action.getGameTarget().getTargetType() == TargetType.SKILL) {
             sb.append(" ").append(action.getGameTarget().getSkill()).append("\n");
         } else {
@@ -254,6 +276,10 @@ public class LoggerStrategy  implements IExtendedStrategy {
         sb.append(action.getAction()).append(" ").append(action.getGameTarget().getTargetType());
         if (action.getGameTarget().getTargetType() == TargetType.LANE) {
             sb.append(" ").append(action.getGameTarget().getLane().getType());
+        }
+        if (action.getAction() == Action.ATTACK) {
+            LivingUnit target = (LivingUnit)action.getGameTarget().getTarget();
+            sb.append(" ").append(target.getLife()).append("/").append(target.getMaxLife());
         }
         if (action.getGameTarget().getTargetType() == TargetType.SKILL) {
             sb.append(" ").append(action.getGameTarget().getSkill()).append("\n");

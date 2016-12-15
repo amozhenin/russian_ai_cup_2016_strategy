@@ -109,7 +109,7 @@ public final class MyStrategy implements IExtendedStrategy {
                 skillIterator.remove();
             }
         }
-        storage.saveCoordinates(new Waypoint(self.getX(), self.getY()));
+//        storage.saveCoordinates(new Waypoint(self.getX(), self.getY()));
     }
 
     private List<GameAction> generateActions(Wizard self, World world, Game game) {
@@ -451,7 +451,7 @@ public final class MyStrategy implements IExtendedStrategy {
             move.setStrafeSpeed(game.getWizardStrafeSpeed() * Math.sin(storage.getDestinationAngle()));
         } else {
             move.setSpeed(game.getWizardForwardSpeed() * Math.cos(storage.getDestinationAngle()));
-            move.setStrafeSpeed(game.getWizardForwardSpeed() * Math.sin(storage.getDestinationAngle()));
+            move.setStrafeSpeed(game.getWizardStrafeSpeed() * Math.sin(storage.getDestinationAngle()));
         }
 
 
@@ -514,6 +514,21 @@ public final class MyStrategy implements IExtendedStrategy {
                             Unit target = action.getGameTarget().getTarget();
                             double angle = self.getAngleTo(target);
 
+                            Waypoint stuckPoint = storage.getStuckPoint();
+                            boolean stuck = false;
+                            if (stuckPoint == null) {
+                                storage.setStuckPoint(new Waypoint(self.getX(), self.getY()));
+                            } else {
+                                double dist = self.getDistanceTo(stuckPoint);
+                                if (dist < 5) {
+                                    storage.incrementStuckTicks();
+                                } else {
+                                    storage.setStuckPoint(new Waypoint(self.getX(), self.getY()));
+                                }
+                                if (storage.getStuckTicks() > 5) {
+                                    stuck = true;
+                                }
+                            }
                             List<CircularUnit> realObstacles = new ArrayList<>();
                             List<CircularUnit> nearObstacles = new ArrayList<>();
                             for (CircularUnit obstacle : storage.getObstacles()) {
@@ -563,6 +578,13 @@ public final class MyStrategy implements IExtendedStrategy {
                                 }
                                 if (found) {
                                     angle = correctedAngle;
+                                }
+                                if (stuck) {
+                                    if (distance < 5) {
+                                        angle = obstacleAngle + StrictMath.PI;
+                                    } else {
+                                        //TODO
+                                    }
                                 }
                             }
                             storage.setDestinationAngle(angle);
@@ -644,8 +666,9 @@ public final class MyStrategy implements IExtendedStrategy {
         if (t.getX() < 0.0 + self.getRadius() || t.getX() > mapSize - self.getRadius() || t.getY() < 0.0 + self.getRadius()|| t.getY() > mapSize - self.getRadius()) {
             return true;
         }
-        return (Math.abs(Math.sin(obstacleAngle - angle)) * obstacleDist < self.getRadius() + obstacle.getRadius() + 3)
-                && (obstacleAngle - angle < StrictMath.PI && obstacleAngle - angle > - StrictMath.PI);
+        return (Math.abs(Math.sin(obstacleAngle - angle)) * obstacleDist < self.getRadius() + obstacle.getRadius() + 5)
+                //&& (obstacleAngle - angle < StrictMath.PI && obstacleAngle - angle > - StrictMath.PI)
+                ;
     }
 }
 

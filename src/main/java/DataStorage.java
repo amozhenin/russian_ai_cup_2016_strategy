@@ -17,7 +17,11 @@ public class DataStorage {
 
     //Mutable data below
     private Lane lane;
-    private List<Waypoint> oldCoordinates = new ArrayList<>(5);
+        //Stuck detection
+    //private List<Waypoint> oldCoordinates = new ArrayList<>(5);
+    Waypoint stuckPoint;
+    int stuckTicks = 0;
+
     private List<SkillType> desiredSkills = new ArrayList<>(25);
 
     //Tick data below
@@ -97,17 +101,34 @@ public class DataStorage {
         return random;
     }
 
-    public void saveCoordinates(Waypoint point) {
-        if (oldCoordinates.size() < 5) {
-            oldCoordinates.add(point);
-        } else {
-            oldCoordinates.remove(0);
-            oldCoordinates.add(point);
-        }
+//    public void saveCoordinates(Waypoint point) {
+//        if (oldCoordinates.size() < 5) {
+//            oldCoordinates.add(point);
+//        } else {
+//            oldCoordinates.remove(0);
+//            oldCoordinates.add(point);
+//        }
+//    }
+//
+//    public List<Waypoint> getCoordinates() {
+//        return oldCoordinates;
+//    }
+
+    public Waypoint getStuckPoint() {
+        return this.stuckPoint;
     }
 
-    public List<Waypoint> getCoordinates() {
-        return oldCoordinates;
+    public void setStuckPoint(Waypoint stuckPoint) {
+        this.stuckPoint = stuckPoint;
+        stuckTicks = 0;
+    }
+
+    public int getStuckTicks() {
+        return this.stuckTicks;
+    }
+
+    public void incrementStuckTicks() {
+        this.stuckTicks++;
     }
 
     public double getDestinationAngle() {
