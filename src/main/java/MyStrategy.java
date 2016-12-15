@@ -26,21 +26,21 @@ public final class MyStrategy implements IExtendedStrategy {
         skills.add(SkillType.MAGICAL_DAMAGE_BONUS_AURA_1);
         skills.add(SkillType.MAGICAL_DAMAGE_BONUS_PASSIVE_2);
         skills.add(SkillType.MAGICAL_DAMAGE_BONUS_AURA_2);
-        skills.add(SkillType.FROST_BOLT);
         skills.add(SkillType.MAGICAL_DAMAGE_ABSORPTION_PASSIVE_1);
         skills.add(SkillType.MAGICAL_DAMAGE_ABSORPTION_AURA_1);
         skills.add(SkillType.MAGICAL_DAMAGE_ABSORPTION_PASSIVE_2);
         skills.add(SkillType.MAGICAL_DAMAGE_ABSORPTION_AURA_2);
-        skills.add(SkillType.SHIELD);
-        skills.add(SkillType.MOVEMENT_BONUS_FACTOR_PASSIVE_1);
-        skills.add(SkillType.MOVEMENT_BONUS_FACTOR_AURA_1);
-        skills.add(SkillType.MOVEMENT_BONUS_FACTOR_PASSIVE_2);
-        skills.add(SkillType.MOVEMENT_BONUS_FACTOR_AURA_2);
-        skills.add(SkillType.HASTE);
         skills.add(SkillType.STAFF_DAMAGE_BONUS_PASSIVE_1);
         skills.add(SkillType.STAFF_DAMAGE_BONUS_AURA_1);
         skills.add(SkillType.STAFF_DAMAGE_BONUS_PASSIVE_2);
         skills.add(SkillType.STAFF_DAMAGE_BONUS_AURA_2);
+        skills.add(SkillType.MOVEMENT_BONUS_FACTOR_PASSIVE_1);
+        skills.add(SkillType.MOVEMENT_BONUS_FACTOR_AURA_1);
+        skills.add(SkillType.MOVEMENT_BONUS_FACTOR_PASSIVE_2);
+        skills.add(SkillType.MOVEMENT_BONUS_FACTOR_AURA_2);
+        skills.add(SkillType.FROST_BOLT);
+        skills.add(SkillType.SHIELD);
+        skills.add(SkillType.HASTE);
         skills.add(SkillType.FIREBALL);
         storage.setDesiredSkills(skills);
     }
