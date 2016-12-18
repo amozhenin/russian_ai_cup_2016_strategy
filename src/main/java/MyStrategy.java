@@ -4,6 +4,7 @@ import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Random;
+import java.util.stream.Collectors;
 
 public final class MyStrategy implements IExtendedStrategy {
 
@@ -128,10 +129,14 @@ public final class MyStrategy implements IExtendedStrategy {
         }
 
         List<LivingUnit> foes = new ArrayList<>();
+        List<LivingUnit> friends = new ArrayList<>();
         for (Building building : world.getBuildings()) {
             if (isFoe(self.getFaction(), building)) {
                 actions.add(new GameAction(Action.ATTACK, new GameTarget(building)));
                 foes.add(building);
+            }
+            if (isFriend(self.getFaction(), building)) {
+                friends.add(building);
             }
         }
         for (Wizard wizard : world.getWizards()) {
@@ -142,11 +147,17 @@ public final class MyStrategy implements IExtendedStrategy {
                 actions.add(new GameAction(Action.ATTACK, new GameTarget(wizard)));
                 foes.add(wizard);
             }
+            if (isFriend(self.getFaction(), wizard)) {
+                friends.add(wizard);
+            }
         }
         for (Minion minion: world.getMinions()) {
             if (isFoe(self.getFaction(), minion)) {
                 actions.add(new GameAction(Action.ATTACK, new GameTarget(minion)));
                 foes.add(minion);
+            }
+            if (isFriend(self.getFaction(), minion)) {
+                friends.add(minion);
             }
         }
         for (Tree tree: world.getTrees()) {
@@ -154,6 +165,7 @@ public final class MyStrategy implements IExtendedStrategy {
           //  foes.add(tree);
         }
         storage.setFoes(foes);
+        storage.setFriends(friends);
         if (foes.isEmpty())
             storage.setTarget(null);
         if (game.isSkillsEnabled()) {
@@ -172,6 +184,10 @@ public final class MyStrategy implements IExtendedStrategy {
             return false;
         }
         return true;
+    }
+
+    private boolean isFriend(Faction faction, CircularUnit unit) {
+        return unit.getFaction() == faction;
     }
 
     private List<EstimatedGameAction> estimate(List<GameAction> actions, Wizard self, World world, Game game) {
@@ -339,50 +355,129 @@ public final class MyStrategy implements IExtendedStrategy {
                 }
                 break;
             case ATTACK:
-                if (self.getDistanceTo(action.getGameTarget().getTarget()) > self.getCastRange()) {
+                if (self.getDistanceTo(action.getGameTarget().getTarget()) > game.getScoreGainRange() + self.getRadius() * 3) {
                     estimation = 0.0;
                 } else {
                     LivingUnit unit = (LivingUnit) action.getGameTarget().getTarget();
+                    double distance = self.getDistanceTo(unit) - self.getRadius() - unit.getRadius();
+                    double distanceFactor;
+                    double factionFactor = 1.0;
+                    double damageFactor = 0.0;
+                    double killFactor = 0.0;
+                    double friendFactor;
+                    double targetedFactor;
+                    if (Math.abs(unit.getAngle() - self.getAngleTo(unit) - StrictMath.PI) < 0.001
+                            || Math.abs(unit.getAngle() - self.getAngleTo(unit) + StrictMath.PI) < 0.001) {
+                        targetedFactor = 1.1;
+                    } else {
+                        targetedFactor = 1.0;
+                    }
+                    if (distance > self.getCastRange()) {
+                        distanceFactor = 0.01;
+                    } else if (distance > 100) {
+                        distanceFactor = 1.12 - distance / 5000.0;
+                    } else {
+                        distanceFactor = 1.5 - 4 * distance / 1000.0;
+                    }
+                    friendFactor = 1.0;
+                    for (LivingUnit friend : storage.getFriends()) {
+                        if (friend instanceof Wizard) {
+                            if (friend.getDistanceTo(unit) <= game.getScoreGainRange()) {
+                                friendFactor = 1.67;
+                            }
+                        }
+                    }
                     switch (action.getGameTarget().getTargetType()) {
                         case WIZARD:
-                            if (unit.getLife() < game.getMagicMissileDirectDamage()) {
-                                estimation = game.getWizardEliminationScoreFactor() * unit.getMaxLife();
+                            damageFactor = game.getMagicMissileDirectDamage() * game.getWizardDamageScoreFactor();
+                            killFactor = game.getWizardEliminationScoreFactor() * unit.getMaxLife();
+                            if (distance < game.getStaffRange()) {
+                                if (unit.getLife() < game.getStaffDamage()) {
+                                    killFactor = killFactor * 0.97;
+                                } else {
+                                    killFactor = killFactor * (1.0 - Math.max(0.0, ((double)unit.getLife() - game.getStaffDamage())) / (double)unit.getMaxLife()) / Math.max(1.0, unit.getLife() / game.getMagicMissileDirectDamage());
+                                }
+                            } else if (distance < self.getCastRange()) {
+                                if (unit.getLife() < game.getMagicMissileDirectDamage()) {
+                                    killFactor = killFactor * 0.94;
+                                } else {
+                                    killFactor = killFactor * (1.0 - Math.max(0.0, ((double)unit.getLife() - game.getMagicMissileDirectDamage())) / (double)unit.getMaxLife()) / Math.max(1.0, unit.getLife() / game.getMagicMissileDirectDamage());
+                                }
                             } else {
-                                double probability = Math.max(0.01, (unit.getMaxLife() + game.getMagicMissileDirectDamage() - unit.getLife()) / unit.getMaxLife());
-                                estimation = game.getWizardDamageScoreFactor() * game.getMagicMissileDirectDamage()
-                                    + probability * game.getWizardEliminationScoreFactor() * unit.getMaxLife();
+                                killFactor = killFactor * 0.1;
                             }
+                            estimation = (killFactor + damageFactor) * factionFactor * friendFactor *  targetedFactor * distanceFactor;
                             break;
                         case MINION:
-                            if (unit.getLife() < game.getMagicMissileDirectDamage()) {
-                                estimation = game.getMinionEliminationScoreFactor() * unit.getMaxLife();
+                            if (unit.getFaction() == Faction.NEUTRAL) {
+                                factionFactor = 0.9;
                             } else {
-                                double probability = Math.max(0.01, (unit.getMaxLife() + game.getMagicMissileDirectDamage() - unit.getLife()) / unit.getMaxLife());
-                                estimation = game.getMinionDamageScoreFactor() * game.getMagicMissileDirectDamage()
-                                        + probability * game.getMinionEliminationScoreFactor() * unit.getMaxLife();
-                                if (unit.getFaction() == Faction.NEUTRAL) {
-                                    estimation = estimation / 2;
-                                }
+                                factionFactor = 1.0;
                             }
+                            Minion minion =(Minion) unit;
+                            damageFactor = game.getMagicMissileDirectDamage() * game.getMinionDamageScoreFactor();
+                            killFactor = game.getMinionEliminationScoreFactor() * unit.getMaxLife();
+                            if (distance < game.getStaffRange()) {
+                                if (minion.getType() == MinionType.ORC_WOODCUTTER) {
+                                    killFactor = killFactor * 2;
+                                }
+                                if (unit.getLife() < game.getStaffDamage()) {
+                                    killFactor = killFactor * 0.97;
+                                } else {
+                                    killFactor = killFactor * (1.0 - Math.max(0.0, ((double)unit.getLife() - game.getStaffDamage())) / (double)unit.getMaxLife()) / Math.max(1.0, unit.getLife() / game.getMagicMissileDirectDamage());
+                                }
+                            } else if (distance < game.getFetishBlowdartAttackRange()) {
+                                if (minion.getType() == MinionType.FETISH_BLOWDART) {
+                                    killFactor = killFactor * 2;
+                                }
+                                if (unit.getLife() < game.getMagicMissileDirectDamage()) {
+                                    killFactor = killFactor * 0.94;
+                                } else {
+                                    killFactor = killFactor * (1.0 - Math.max(0.0, ((double)unit.getLife() - game.getMagicMissileDirectDamage())) / (double)unit.getMaxLife()) / Math.max(1.0, unit.getLife() / game.getMagicMissileDirectDamage());
+                                }
+                            } else if (distance < self.getCastRange()) {
+                                if (unit.getLife() < game.getMagicMissileDirectDamage()) {
+                                    killFactor = killFactor * 0.95;
+                                } else {
+                                    killFactor = killFactor * (1.0 - Math.max(0.0, ((double)unit.getLife() - game.getMagicMissileDirectDamage())) / (double)unit.getMaxLife()) / Math.max(1.0, unit.getLife() / game.getMagicMissileDirectDamage());
+                                }
+                            } else {
+                                killFactor = killFactor * 0.1;
+                            }
+                            estimation = (killFactor + damageFactor) * factionFactor * friendFactor *  targetedFactor * distanceFactor;
                             break;
                         case BUILDING:
+                            targetedFactor = 1.0; //TODO calculate if I'm nearest to building
                             Building building = (Building) unit;
-                            if (unit.getLife() < game.getMagicMissileDirectDamage()) {
-                                estimation = game.getBuildingEliminationScoreFactor() * unit.getMaxLife();
-                                if (building.getType() == BuildingType.FACTION_BASE) {
-                                    estimation += game.getVictoryScore();
+                            damageFactor = game.getMagicMissileDirectDamage() * game.getBuildingDamageScoreFactor();
+                            killFactor = game.getBuildingEliminationScoreFactor() * unit.getMaxLife();
+                            if (building.getType() == BuildingType.FACTION_BASE) {
+                                killFactor += game.getVictoryScore();
+                            }
+                            if (distance < game.getStaffRange()) {
+                                if (unit.getLife() < game.getStaffDamage()) {
+                                    killFactor = killFactor * 1;
+                                } else {
+                                    killFactor = killFactor * (1.0 - Math.max(0.0, ((double)unit.getLife() - game.getStaffDamage())) / (double)unit.getMaxLife()) / Math.max(1.0, unit.getLife() / game.getMagicMissileDirectDamage());
+                                }
+                            } else if (distance < self.getCastRange()) {
+                                if (unit.getLife() < game.getMagicMissileDirectDamage()) {
+                                    killFactor = killFactor * 1;
+                                } else {
+                                    killFactor = killFactor * (1.0 - Math.max(0.0, ((double)unit.getLife() - game.getMagicMissileDirectDamage())) / (double)unit.getMaxLife()) / Math.max(1.0, unit.getLife() / game.getMagicMissileDirectDamage());
                                 }
                             } else {
-                                double probability = Math.max(0.01, (unit.getMaxLife() + game.getMagicMissileDirectDamage() - unit.getLife()) / unit.getMaxLife());
-                                estimation = game.getBuildingDamageScoreFactor() * game.getMagicMissileDirectDamage()
-                                        + probability * game.getBuildingEliminationScoreFactor() * unit.getMaxLife();
-                                if (building.getType() == BuildingType.FACTION_BASE) {
-                                    estimation += game.getVictoryScore() * probability;
-                                }
+                                killFactor = killFactor * 0.1;
                             }
+                            estimation = (killFactor + damageFactor) * factionFactor * friendFactor *  targetedFactor * distanceFactor;
                             break;
                         case TREE:
-                            estimation = 1.0 / self.getDistanceTo(action.getGameTarget().getTarget()) ;
+                            targetedFactor = 1.0;
+                            friendFactor  = 1.0;
+                            damageFactor = 0.001;
+                            factionFactor = 0.1;
+                            killFactor = 0.002 * (1.0 - Math.max(0.0, ((double)unit.getLife() - game.getMagicMissileDirectDamage())) / (double)unit.getMaxLife()) / Math.max(1.0, unit.getLife() / game.getMagicMissileDirectDamage());
+                            estimation = (killFactor + damageFactor) * factionFactor * friendFactor *  targetedFactor * distanceFactor;
                             break;
                         default:
                             estimation = 0.0;
@@ -485,22 +580,75 @@ public final class MyStrategy implements IExtendedStrategy {
         }
 
         if (storage.getTarget() != null) {
-            if ((storage.getTargetAngle() >= -StrictMath.PI / 12 && storage.getTargetAngle() <= StrictMath.PI / 12)
-                    && (self.getRemainingActionCooldownTicks() == 0)) {
-                if ((self.getRemainingCooldownTicksByAction()[ActionType.MAGIC_MISSILE.ordinal()] == 0)
-                        && storage.getTargetDistance() < self.getCastRange()) {
-                    move.setAction(ActionType.MAGIC_MISSILE);
-                    move.setCastAngle(storage.getTargetAngle());
-                    move.setMinCastDistance(storage.getTargetDistance() - storage.getTarget().getRadius() + game.getMagicMissileRadius());
-                    move.setMaxCastDistance(storage.getTargetDistance() + storage.getTarget().getRadius());
+            if (self.getRemainingActionCooldownTicks() == 0) {
+                if (storage.getTargetAngle() >= -StrictMath.PI / 12 && storage.getTargetAngle() <= StrictMath.PI / 12) {
+                    if ((self.getRemainingCooldownTicksByAction()[ActionType.STAFF.ordinal()] == 0)
+                            && storage.getTargetDistance() < game.getStaffRange()) {
+                        move.setAction(ActionType.STAFF);
+                    } else if ((self.getRemainingCooldownTicksByAction()[ActionType.MAGIC_MISSILE.ordinal()] == 0)
+                            && storage.getTargetDistance() < self.getCastRange()) {
+                        move.setAction(ActionType.MAGIC_MISSILE);
+                        move.setCastAngle(storage.getTargetAngle());
+                        move.setMinCastDistance(storage.getTargetDistance() - storage.getTarget().getRadius() + game.getMagicMissileRadius());
+                        move.setMaxCastDistance(storage.getTargetDistance() + storage.getTarget().getRadius());
+                    } else {
+                        for (EstimatedGameAction attack : getAttackCandidates()) {
+                            double castAngle = self.getAngleTo(attack.getGameTarget().getTarget());
+                            double dist = self.getDistanceTo(attack.getGameTarget().getTarget());
+                            if (castAngle < -StrictMath.PI / 12 || castAngle > StrictMath.PI / 12) {
+                                continue;
+                            }
+                            if ((self.getRemainingCooldownTicksByAction()[ActionType.STAFF.ordinal()] == 0)
+                                    && dist < game.getStaffRange()) {
+                                move.setAction(ActionType.STAFF);
+                                return;
+                            } else if ((self.getRemainingCooldownTicksByAction()[ActionType.MAGIC_MISSILE.ordinal()] == 0)
+                                    && dist < self.getCastRange()) {
+                                move.setAction(ActionType.MAGIC_MISSILE);
+                                move.setCastAngle(castAngle);
+                                move.setMinCastDistance(dist - ((LivingUnit)attack.getGameTarget().getTarget()).getRadius() + game.getMagicMissileRadius());
+                                move.setMaxCastDistance(dist + ((LivingUnit)attack.getGameTarget().getTarget()).getRadius());
+                                return;
+                            }
+                        }
+                        move.setAction(ActionType.NONE);
+                    }
+                } else {
+                    for (EstimatedGameAction attack : getAttackCandidates()) {
+                        double castAngle = self.getAngleTo(attack.getGameTarget().getTarget());
+                        double dist = self.getDistanceTo(attack.getGameTarget().getTarget());
+                        if (castAngle < -StrictMath.PI / 12 || castAngle > StrictMath.PI / 12) {
+                            continue;
+                        }
+                        if ((self.getRemainingCooldownTicksByAction()[ActionType.STAFF.ordinal()] == 0)
+                                && dist < game.getStaffRange()) {
+                            move.setAction(ActionType.STAFF);
+                            return;
+                        } else if ((self.getRemainingCooldownTicksByAction()[ActionType.MAGIC_MISSILE.ordinal()] == 0)
+                                && dist < self.getCastRange()) {
+                            move.setAction(ActionType.MAGIC_MISSILE);
+                            move.setCastAngle(castAngle);
+                            move.setMinCastDistance(dist - ((LivingUnit)attack.getGameTarget().getTarget()).getRadius() + game.getMagicMissileRadius());
+                            move.setMaxCastDistance(dist + ((LivingUnit)attack.getGameTarget().getTarget()).getRadius());
+                            return;
+                        }
+                    }
+                    move.setAction(ActionType.NONE);
                 }
-            } else if ((self.getRemainingCooldownTicksByAction()[ActionType.STAFF.ordinal()] == 0)
-                    && storage.getTargetDistance() < game.getStaffRange()) {
-                move.setAction(ActionType.STAFF);
             } else {
                 move.setAction(ActionType.NONE);
             }
         }
+    }
+
+    private List<EstimatedGameAction> getAttackCandidates() {
+        return storage.getEstimatedActions().stream().filter(e -> (e.getEstimation() > 0.0) && (e.getAction() == Action.ATTACK)).sorted(
+                (e1, e2) -> e1.getEstimation() == e2.getEstimation()
+                          ? 0
+                          : (e1.getEstimation() > e2.getEstimation()
+                           ? -1
+                           : 1)
+                 ).collect(Collectors.toList());
     }
 
     private void tryApplyAction(EstimatedGameAction action, Wizard self, World world, Game game, Move move) {
@@ -670,5 +818,31 @@ public final class MyStrategy implements IExtendedStrategy {
                 //&& (obstacleAngle - angle < StrictMath.PI && obstacleAngle - angle > - StrictMath.PI)
                 ;
     }
+
+//    public double getEffectiveMagicMissileDamage(Wizard self, LivingUnit unit, Game game) {
+//
+//    }
+//
+//    public double getEffectiveFrostBoltDamage(Wizard self, LivingUnit unit, Game game) {
+//
+//    }
+//
+//    public double getEffectiveFireBallDamage(Wizard self, LivingUnit unit, Game game) {
+//
+//    }
+
+//    public boolean hasSkill(Wizard wizard, SkillType skill, Game game) {
+//        boolean found = false;
+//        if (!game.isSkillsEnabled()) {
+//            return found;
+//        }
+//        for (SkillType test : wizard.getSkills()) {
+//            if (test == skill) {
+//                found = true;
+//                break;
+//            }
+//        }
+//        return found;
+//    }
 }
 
