@@ -30,6 +30,7 @@ public class DataStorage {
     private List<EstimatedGameAction> bestActions;
     private List<CircularUnit> obstacles;
     private List<LivingUnit> foes;
+    private List<LivingUnit> friends;
 
     private double destinationAngle;
     private double targetAngle;
@@ -177,5 +178,13 @@ public class DataStorage {
 
     public void setDesiredSkills(List<SkillType> desiredSkills) {
         this.desiredSkills = desiredSkills;
+    }
+
+    public List<LivingUnit> getFriends() {
+        return this.friends;
+    }
+
+    public void setFriends(List<LivingUnit> friends) {
+        this.friends = friends;
     }
 }
