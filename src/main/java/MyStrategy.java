@@ -583,7 +583,7 @@ public final class MyStrategy implements IExtendedStrategy {
             if (self.getRemainingActionCooldownTicks() == 0) {
                 if (storage.getTargetAngle() >= -StrictMath.PI / 12 && storage.getTargetAngle() <= StrictMath.PI / 12) {
                     if ((self.getRemainingCooldownTicksByAction()[ActionType.STAFF.ordinal()] == 0)
-                            && storage.getTargetDistance() < game.getStaffRange()) {
+                            && storage.getTargetDistance() < game.getStaffRange() + storage.getTarget().getRadius()) {
                         move.setAction(ActionType.STAFF);
                     } else if ((self.getRemainingCooldownTicksByAction()[ActionType.MAGIC_MISSILE.ordinal()] == 0)
                             && storage.getTargetDistance() < self.getCastRange()) {
@@ -599,7 +599,7 @@ public final class MyStrategy implements IExtendedStrategy {
                                 continue;
                             }
                             if ((self.getRemainingCooldownTicksByAction()[ActionType.STAFF.ordinal()] == 0)
-                                    && dist < game.getStaffRange()) {
+                                    && dist < game.getStaffRange() + ((LivingUnit)attack.getGameTarget().getTarget()).getRadius()) {
                                 move.setAction(ActionType.STAFF);
                                 return;
                             } else if ((self.getRemainingCooldownTicksByAction()[ActionType.MAGIC_MISSILE.ordinal()] == 0)
@@ -621,7 +621,7 @@ public final class MyStrategy implements IExtendedStrategy {
                             continue;
                         }
                         if ((self.getRemainingCooldownTicksByAction()[ActionType.STAFF.ordinal()] == 0)
-                                && dist < game.getStaffRange()) {
+                                && dist < game.getStaffRange() + ((LivingUnit)attack.getGameTarget().getTarget()).getRadius()) {
                             move.setAction(ActionType.STAFF);
                             return;
                         } else if ((self.getRemainingCooldownTicksByAction()[ActionType.MAGIC_MISSILE.ordinal()] == 0)
