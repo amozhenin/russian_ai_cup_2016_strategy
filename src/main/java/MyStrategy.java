@@ -410,7 +410,7 @@ public final class MyStrategy implements IExtendedStrategy {
                             break;
                         case MINION:
                             if (unit.getFaction() == Faction.NEUTRAL) {
-                                factionFactor = 0.9;
+                                factionFactor = 0.95;
                             } else {
                                 factionFactor = 1.0;
                             }
@@ -590,7 +590,7 @@ public final class MyStrategy implements IExtendedStrategy {
                         move.setAction(ActionType.MAGIC_MISSILE);
                         move.setCastAngle(storage.getTargetAngle());
                         move.setMinCastDistance(storage.getTargetDistance() - storage.getTarget().getRadius() + game.getMagicMissileRadius());
-                        move.setMaxCastDistance(storage.getTargetDistance() + storage.getTarget().getRadius());
+                       // move.setMaxCastDistance(storage.getTargetDistance() + storage.getTarget().getRadius());
                     } else {
                         for (EstimatedGameAction attack : getAttackCandidates()) {
                             double castAngle = self.getAngleTo(attack.getGameTarget().getTarget());
@@ -607,7 +607,7 @@ public final class MyStrategy implements IExtendedStrategy {
                                 move.setAction(ActionType.MAGIC_MISSILE);
                                 move.setCastAngle(castAngle);
                                 move.setMinCastDistance(dist - ((LivingUnit)attack.getGameTarget().getTarget()).getRadius() + game.getMagicMissileRadius());
-                                move.setMaxCastDistance(dist + ((LivingUnit)attack.getGameTarget().getTarget()).getRadius());
+                           //     move.setMaxCastDistance(dist + ((LivingUnit)attack.getGameTarget().getTarget()).getRadius());
                                 return;
                             }
                         }
@@ -629,7 +629,7 @@ public final class MyStrategy implements IExtendedStrategy {
                             move.setAction(ActionType.MAGIC_MISSILE);
                             move.setCastAngle(castAngle);
                             move.setMinCastDistance(dist - ((LivingUnit)attack.getGameTarget().getTarget()).getRadius() + game.getMagicMissileRadius());
-                            move.setMaxCastDistance(dist + ((LivingUnit)attack.getGameTarget().getTarget()).getRadius());
+                      //      move.setMaxCastDistance(dist + ((LivingUnit)attack.getGameTarget().getTarget()).getRadius());
                             return;
                         }
                     }
