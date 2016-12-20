@@ -21,6 +21,10 @@ public class DataStorage {
     //private List<Waypoint> oldCoordinates = new ArrayList<>(5);
     Waypoint stuckPoint;
     int stuckTicks = 0;
+    private boolean hasFrostBolt = false;
+    private boolean hasFireBall = false;
+    private boolean hasShield = false;
+    private boolean hasHaste = false;
 
     private List<SkillType> desiredSkills = new ArrayList<>(25);
 
@@ -186,5 +190,37 @@ public class DataStorage {
 
     public void setFriends(List<LivingUnit> friends) {
         this.friends = friends;
+    }
+
+    public boolean hasFrostBolt() {
+        return hasFrostBolt;
+    }
+
+    public void nowHaveFrostBolt() {
+        hasFrostBolt = true;
+    }
+
+    public boolean hasFireBall() {
+        return hasFireBall;
+    }
+
+    public void nowHaveFireBall() {
+        hasFireBall = true;
+    }
+
+    public boolean hasShield() {
+        return hasShield;
+    }
+
+    public void nowHaveShield() {
+        hasShield = true;
+    }
+
+    public boolean hasHaste() {
+        return hasHaste;
+    }
+
+    public void nowHaveHaste() {
+        hasHaste = true;
     }
 }
