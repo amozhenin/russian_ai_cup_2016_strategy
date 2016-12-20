@@ -18,24 +18,29 @@ public final class MyStrategy implements IExtendedStrategy {
     private void init() {
         //init skills
         List<SkillType> skills = storage.getDesiredSkills();
+
         skills.add(SkillType.MAGICAL_DAMAGE_BONUS_PASSIVE_1);
         skills.add(SkillType.MAGICAL_DAMAGE_BONUS_AURA_1);
         skills.add(SkillType.MAGICAL_DAMAGE_BONUS_PASSIVE_2);
         skills.add(SkillType.MAGICAL_DAMAGE_BONUS_AURA_2);
         skills.add(SkillType.FROST_BOLT);
+
         skills.add(SkillType.RANGE_BONUS_PASSIVE_1);
         skills.add(SkillType.RANGE_BONUS_AURA_1);
         skills.add(SkillType.RANGE_BONUS_PASSIVE_2);
         skills.add(SkillType.RANGE_BONUS_AURA_2);
         skills.add(SkillType.ADVANCED_MAGIC_MISSILE);
+
         skills.add(SkillType.MAGICAL_DAMAGE_ABSORPTION_PASSIVE_1);
         skills.add(SkillType.MAGICAL_DAMAGE_ABSORPTION_AURA_1);
         skills.add(SkillType.MAGICAL_DAMAGE_ABSORPTION_PASSIVE_2);
         skills.add(SkillType.MAGICAL_DAMAGE_ABSORPTION_AURA_2);
+
         skills.add(SkillType.STAFF_DAMAGE_BONUS_PASSIVE_1);
         skills.add(SkillType.STAFF_DAMAGE_BONUS_AURA_1);
         skills.add(SkillType.STAFF_DAMAGE_BONUS_PASSIVE_2);
         skills.add(SkillType.STAFF_DAMAGE_BONUS_AURA_2);
+
         skills.add(SkillType.MOVEMENT_BONUS_FACTOR_PASSIVE_1);
         skills.add(SkillType.MOVEMENT_BONUS_FACTOR_AURA_1);
         skills.add(SkillType.MOVEMENT_BONUS_FACTOR_PASSIVE_2);
@@ -746,7 +751,7 @@ public final class MyStrategy implements IExtendedStrategy {
                                 }
                                 double correctedAngle = angle;
                                 boolean found = false;
-                                for(int i = 1; i <= 200; i++) {
+                                for(int i = 1; i <= 360; i++) {
                                     correctedAngle -= (StrictMath.PI * i * sign) / 180;
                                     sign = -sign;
                                     if (isObstacleForAngle(self, correctedAngle, nearest, game.getMapSize())) {
