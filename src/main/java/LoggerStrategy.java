@@ -11,9 +11,9 @@ public class LoggerStrategy  implements IExtendedStrategy {
     private Writer log;
     private DataStorage storage;
 
-    public LoggerStrategy() throws IOException {
+    public LoggerStrategy(int index, String name) throws IOException {
         firstTick = true;
-        log = new OutputStreamWriter(new FileOutputStream("Game.log"), "UTF-8");
+        log = new BufferedWriter(new OutputStreamWriter(new FileOutputStream(name + index + ".log"), "UTF-8"));
     }
 
     @Override

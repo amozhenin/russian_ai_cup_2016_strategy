@@ -13,11 +13,18 @@ public class DirtyStrategy implements Strategy {
     private IExtendedStrategy myStrategy;
     private IExtendedStrategy loggerStrategy;
 
-    public DirtyStrategy() throws IOException {
+    public DirtyStrategy(int strategyType, int index) throws IOException {
         System.out.println("Hello cruel world, this is dirty!");
-        myStrategy = new MyStrategy();
+        String name;
+        if (strategyType == 0) {
+            name = "Dvorkin";
+            myStrategy = new MyStrategy();
+        } else {
+            //TODO add test strategies
+            throw new RuntimeException("Not supported yet");
+        }
         DataStorage storage = myStrategy.getDataStorage();
-        loggerStrategy = new LoggerStrategy();
+        loggerStrategy = new LoggerStrategy(index, name);
         loggerStrategy.setDataStorage(storage);
     }
 
