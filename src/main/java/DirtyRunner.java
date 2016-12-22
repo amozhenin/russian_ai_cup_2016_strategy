@@ -2,15 +2,15 @@ import model.*;
 
 import java.io.IOException;
 
-public final class RunnerCopy {
+public final class DirtyRunner {
     private final RemoteProcessClient remoteProcessClient;
     private final String token;
 
     public static void main(String[] args) throws IOException {
-        new RunnerCopy(args.length == 3 ? args : new String[]{"127.0.0.1", "31001", "0000000000000000"}).run();
+        new DirtyRunner(args.length == 3 ? args : new String[]{"127.0.0.1", "31001", "0000000000000000"}).run();
     }
 
-    private RunnerCopy(String[] args) throws IOException {
+    private DirtyRunner(String[] args) throws IOException {
         remoteProcessClient = new RemoteProcessClient(args[0], Integer.parseInt(args[1]));
         token = args[2];
     }
