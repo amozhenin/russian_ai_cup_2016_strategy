@@ -115,6 +115,14 @@ public class LoggerStrategy  implements IExtendedStrategy {
         for (int i = 0; i < xp.length; i++) {
             sb.append(i).append("  ").append(xp[i]).append("\n");
         }
+        sb.append("==Coeffs==\n");
+        sb.append("Wizard damaged = ").append(game.getWizardDamageScoreFactor());
+        sb.append(", Wizard killed = ").append(game.getWizardEliminationScoreFactor());
+        sb.append(", Building damaged = ").append(game.getBuildingDamageScoreFactor());
+        sb.append(", Building killed = ").append(game.getBuildingEliminationScoreFactor());
+        sb.append(", Minion damaged = ").append(game.getMinionDamageScoreFactor());
+        sb.append(", Minion killed = ").append(game.getMinionEliminationScoreFactor()).append("\n");
+
     }
 
     private void logWizardInfo(StringBuilder sb, Wizard wizard) {
