@@ -373,7 +373,7 @@ public final class MyStrategy implements IExtendedStrategy {
                     estimation = 0.0;
                 } else {
                     LivingUnit unit = (LivingUnit) action.getGameTarget().getTarget();
-                    double distance = self.getDistanceTo(unit) - self.getRadius() - unit.getRadius();
+                    double distance = self.getDistanceTo(unit) - unit.getRadius();
                     double distanceFactor;
                     double factionFactor = 1.0;
                     double damageFactor = 0.0;
@@ -597,19 +597,19 @@ public final class MyStrategy implements IExtendedStrategy {
             if (self.getRemainingActionCooldownTicks() == 0) {
                 if (storage.getTargetAngle() >= -StrictMath.PI / 12 && storage.getTargetAngle() <= StrictMath.PI / 12) {
                     if ((self.getRemainingCooldownTicksByAction()[ActionType.STAFF.ordinal()] == 0)
-                            && storage.getTargetDistance() < game.getStaffRange() + storage.getTarget().getRadius()) {
+                            && storage.getTargetDistance() <= game.getStaffRange() + storage.getTarget().getRadius()) {
                         move.setAction(ActionType.STAFF);
                     } else if (storage.hasFrostBolt()
                             && self.getMana() > game.getFrostBoltManacost()
                             && (self.getRemainingCooldownTicksByAction()[ActionType.FROST_BOLT.ordinal()] == 0)
-                            && storage.getTargetDistance() < self.getCastRange() + storage.getTarget().getRadius()
+                            && storage.getTargetDistance() <= self.getCastRange() + storage.getTarget().getRadius()
                             && storage.getTarget() instanceof Wizard) {
                         move.setAction(ActionType.FROST_BOLT);
                         move.setCastAngle(storage.getTargetAngle());
                         move.setMinCastDistance(storage.getTargetDistance() - storage.getTarget().getRadius() + game.getFrostBoltRadius());
 
                     } else if ((self.getRemainingCooldownTicksByAction()[ActionType.MAGIC_MISSILE.ordinal()] == 0)
-                            && storage.getTargetDistance() < self.getCastRange() + storage.getTarget().getRadius() ) {
+                            && storage.getTargetDistance() <= self.getCastRange() + storage.getTarget().getRadius()) {
                         move.setAction(ActionType.MAGIC_MISSILE);
                         move.setCastAngle(storage.getTargetAngle());
                         move.setMinCastDistance(storage.getTargetDistance() - storage.getTarget().getRadius() + game.getMagicMissileRadius());
@@ -623,20 +623,20 @@ public final class MyStrategy implements IExtendedStrategy {
                                 continue;
                             }
                             if ((self.getRemainingCooldownTicksByAction()[ActionType.STAFF.ordinal()] == 0)
-                                    && dist < game.getStaffRange() + target.getRadius()) {
+                                    && dist <= game.getStaffRange() + target.getRadius()) {
                                 move.setAction(ActionType.STAFF);
                                 return;
                             } else if (storage.hasFrostBolt()
                                     && self.getMana() > game.getFrostBoltManacost()
                                     && (self.getRemainingCooldownTicksByAction()[ActionType.FROST_BOLT.ordinal()] == 0)
-                                    && dist < self.getCastRange() + target.getRadius()
+                                    && dist <= self.getCastRange() + target.getRadius()
                                     && attack.getGameTarget().getTarget() instanceof Wizard) {
                                 move.setAction(ActionType.FROST_BOLT);
                                 move.setCastAngle(castAngle);
                                 move.setMinCastDistance(dist - target.getRadius() + game.getFrostBoltRadius());
 
                             } else if ((self.getRemainingCooldownTicksByAction()[ActionType.MAGIC_MISSILE.ordinal()] == 0)
-                                    && dist < self.getCastRange() + target.getRadius()) {
+                                    && dist <= self.getCastRange() + target.getRadius()) {
                                 move.setAction(ActionType.MAGIC_MISSILE);
                                 move.setCastAngle(castAngle);
                                 move.setMinCastDistance(dist - target.getRadius() + game.getMagicMissileRadius());
@@ -655,20 +655,20 @@ public final class MyStrategy implements IExtendedStrategy {
                             continue;
                         }
                         if ((self.getRemainingCooldownTicksByAction()[ActionType.STAFF.ordinal()] == 0)
-                                && dist < game.getStaffRange() + target.getRadius()) {
+                                && dist <= game.getStaffRange() + target.getRadius()) {
                             move.setAction(ActionType.STAFF);
                             return;
                         } else if (storage.hasFrostBolt()
                                 && self.getMana() > game.getFrostBoltManacost()
                                 && (self.getRemainingCooldownTicksByAction()[ActionType.FROST_BOLT.ordinal()] == 0)
-                                && dist < self.getCastRange() + target.getRadius()
+                                && dist <= self.getCastRange() + target.getRadius()
                                 && attack.getGameTarget().getTarget() instanceof Wizard) {
                             move.setAction(ActionType.FROST_BOLT);
                             move.setCastAngle(castAngle);
                             move.setMinCastDistance(dist - target.getRadius() + game.getFrostBoltRadius());
 
                         } else if ((self.getRemainingCooldownTicksByAction()[ActionType.MAGIC_MISSILE.ordinal()] == 0)
-                                && dist < self.getCastRange() + target.getRadius()) {
+                                && dist <= self.getCastRange() + target.getRadius()) {
                             move.setAction(ActionType.MAGIC_MISSILE);
                             move.setCastAngle(castAngle);
                             move.setMinCastDistance(dist - target.getRadius() + game.getMagicMissileRadius());
