@@ -22,6 +22,12 @@ public class DirtyStrategy implements Strategy {
         } else if (strategyType == 1) {
             name = "Center";
             myStrategy = new MiddleStrategy();
+        } else if (strategyType == 2) {
+            name = "Range";
+            myStrategy = new RangeStrategy();
+        } else if (strategyType == 3) {
+            name = "Fireball";
+            myStrategy = new FireballStrategy();
         } else {
             //TODO add test strategies
             throw new RuntimeException("Not supported yet");

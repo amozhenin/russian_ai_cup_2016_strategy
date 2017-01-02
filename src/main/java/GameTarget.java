@@ -6,7 +6,7 @@ import model.*;
 public class GameTarget {
 
     private final TargetType type;
-    private final Unit target;
+    private final CircularUnit target;
     private final Lane lane;
     private final SkillType skill;
 
@@ -248,7 +248,7 @@ public class GameTarget {
         return type;
     }
 
-    public Unit getTarget() {
+    public CircularUnit getTarget() {
         return target;
     }
 
