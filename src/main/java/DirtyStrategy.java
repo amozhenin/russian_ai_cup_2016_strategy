@@ -28,6 +28,9 @@ public class DirtyStrategy implements Strategy {
         } else if (strategyType == 3) {
             name = "Fireball";
             myStrategy = new FireballStrategy();
+        } else if (strategyType == 100) {
+            name = "Dvorkin-100-";
+            myStrategy = new MyStrategy100();
         } else {
             //TODO add test strategies
             throw new RuntimeException("Not supported yet");
