@@ -83,7 +83,44 @@ public class MyStrategy implements IExtendedStrategy {
     }
 
     private void precalc(Wizard self, World world, Game game) {
-        ZoneMapper mapper = new ZoneMapper(game.getMapSize());
+        if (world.getTickIndex() == 0) {
+            ZoneMapper mapper = new ZoneMapper(game.getMapSize());
+            storage.setZoneMapper(mapper);
+            Random random = new Random(game.getRandomSeed());
+            storage.setRandom(random);
+        }
+
+        int tick = world.getTickIndex();
+        if (tick > storage.getLatestTick() + 1) {
+            int diff = tick - storage.getLatestTick();
+            if (diff >= game.getWizardMinResurrectionDelayTicks() &&
+                    diff <= game.getWizardMaxResurrectionDelayTicks() &&
+                    self.getLife() == self.getMaxLife() &&
+                    self.getMana() == self.getMaxMana()) {
+                storage.setJustResurrected(true);
+                storage.setJustUnfrozen(false);
+                storage.setJustUnknownWaked(false);
+                storage.setLatestDeathTick(storage.getLatestTick());
+            } else if (diff >= game.getFrozenDurationTicks() &&
+                    diff < 9 * game.getFrozenDurationTicks() &&
+                    self.getLife() < self.getMaxLife()) {
+                storage.setJustResurrected(false);
+                storage.setJustUnfrozen(true);
+                storage.setJustUnknownWaked(false);
+                storage.setLatestFrozenTick(storage.getLatestTick());
+            } else {
+                storage.setJustResurrected(false);
+                storage.setJustUnfrozen(false);
+                storage.setJustUnknownWaked(true);
+                storage.setLatestUnknownThingTick(storage.getLatestTick());
+            }
+
+        } else {
+            storage.setJustResurrected(false);
+            storage.setJustUnfrozen(false);
+        }
+        storage.setLatestTick(world.getTickIndex());
+
         List<CircularUnit> obstacles = new ArrayList<>();
         for (Building building: world.getBuildings()) {
             obstacles.add(building);
@@ -100,9 +137,7 @@ public class MyStrategy implements IExtendedStrategy {
             obstacles.add(tree);
         }
         storage.setObstacles(obstacles);
-        storage.setZoneMapper(mapper);
-        Random random = new Random(game.getRandomSeed());
-        storage.setRandom(random);
+
         List<SkillType> skills = storage.getDesiredSkills();
         SkillType[] learnedSkills = self.getSkills();
         Iterator<SkillType> skillIterator = skills.iterator();
@@ -260,10 +295,10 @@ public class MyStrategy implements IExtendedStrategy {
                                     estimation -= 0.2;
                                 if (self.getLife() <= self.getMaxLife() * 0.2)
                                     estimation -= 0.2;
-                                double closestDist = getDistanceToClosestFoe(self);
-                                if (closestDist > game.getScoreGainRange()) {
-                                    estimation += 5.0;
-                                }
+//                                double closestDist = getDistanceToClosestFoe(self);
+//                                if (closestDist > game.getScoreGainRange()) {
+//                                    estimation += 5.0;
+//                                }
                                     for (LivingUnit foe : storage.getFoes()) {
 //                                    if (foe.getFaction() == Faction.NEUTRAL) {
 //                                        continue;
@@ -356,10 +391,10 @@ public class MyStrategy implements IExtendedStrategy {
                     if (self.getLife() < self.getMaxLife() * 0.4) {
                         estimation -= 0.1;
                     }
-                    double closestDist = getDistanceToClosestFoe(self);
-                    if (closestDist > game.getScoreGainRange()) {
-                        estimation -= 5.0;
-                    }
+//                    double closestDist = getDistanceToClosestFoe(self);
+//                    if (closestDist > game.getScoreGainRange()) {
+//                        estimation -= 5.0;
+//                    }
                         for (LivingUnit foe : storage.getFoes()) {
 //                        if (foe.getFaction() == Faction.NEUTRAL) {
 //                            continue;
@@ -441,10 +476,10 @@ public class MyStrategy implements IExtendedStrategy {
                         estimation += 0.2;
                     if (self.getLife() < self.getMaxLife() * 0.2)
                         estimation += 0.2;
-                    double closestDist = getDistanceToClosestFoe(self);
-                    if (closestDist > game.getScoreGainRange()) {
-                        estimation -= 5.0;
-                    }
+//                    double closestDist = getDistanceToClosestFoe(self);
+//                    if (closestDist > game.getScoreGainRange()) {
+//                        estimation -= 5.0;
+//                    }
                         for (LivingUnit foe : storage.getFoes()) {
 //                        if (foe.getFaction() == Faction.NEUTRAL) {
 //                            continue;

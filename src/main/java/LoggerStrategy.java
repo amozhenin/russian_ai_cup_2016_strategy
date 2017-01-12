@@ -9,11 +9,13 @@ public class LoggerStrategy  implements IExtendedStrategy {
 
     private boolean firstTick;
     private Writer log;
+    private Writer importantLog;
     private DataStorage storage;
 
     public LoggerStrategy(int index, String name) throws IOException {
         firstTick = true;
         log = new BufferedWriter(new OutputStreamWriter(new FileOutputStream(name + index + ".log"), "UTF-8"));
+        importantLog = new BufferedWriter(new OutputStreamWriter(new FileOutputStream(name + "-imp-" + index + ".log"), "UTF-8"));
     }
 
     @Override
@@ -21,6 +23,8 @@ public class LoggerStrategy  implements IExtendedStrategy {
         try {
             log.flush();
             log.close();
+            importantLog.flush();
+            importantLog.close();
         } catch (IOException e) {
             System.out.println("IOException " + e);
         }
@@ -39,17 +43,47 @@ public class LoggerStrategy  implements IExtendedStrategy {
     @Override
     public void move(Wizard self, World world, Game game, Move move) {
         try {
+            if (storage.isJustResurrected()) {
+                logResurrection();
+            }
+            if (storage.isJustUnfrozen()) {
+                logUnfrozen();
+            }
+            if (storage.isJustUnknownWaked()) {
+                logUnknownWake();
+            }
             if (firstTick) {
                 logInfo(self, world, game);
                 firstTick = false;
             }
             logTickInfo(self, world, move);
-            //log.write(String.valueOf(game.getRandomSeed()) + "\n");
         } catch (IOException e) {
             System.out.println("IOException " + e);
         }
-//        move.setAction(ActionType.NONE);
-//        move.setSpeed(game.getWizardForwardSpeed());
+    }
+
+    private void logResurrection() throws IOException {
+        StringBuilder sb = new StringBuilder();
+        sb.append("Tick #").append(storage.getLatestTick());
+        sb.append(": Just resurrected. Death after tick #");
+        sb.append(storage.getLatestDeathTick()).append("\n");
+        importantLog.write(sb.toString());
+    }
+
+    private void logUnfrozen() throws IOException {
+        StringBuilder sb = new StringBuilder();
+        sb.append("Tick #").append(storage.getLatestTick());
+        sb.append(": Just unfrozen. Frozen after tick #");
+        sb.append(storage.getLatestFrozenTick()).append("\n");
+        importantLog.write(sb.toString());
+    }
+
+    private void logUnknownWake() throws IOException {
+        StringBuilder sb = new StringBuilder();
+        sb.append("Tick #").append(storage.getLatestTick());
+        sb.append(": Just waked from unknown thing. Unknown thing on tick #");
+        sb.append(storage.getLatestUnknownThingTick()).append("\n");
+        importantLog.write(sb.toString());
     }
 
     private void logInfo(Wizard self, World world, Game game) throws IOException {

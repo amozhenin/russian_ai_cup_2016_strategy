@@ -29,6 +29,13 @@ public class DataStorage {
     private List<SkillType> desiredSkills = new ArrayList<>(25);
 
     //Tick data below
+    private int latestTick = -1;
+    private boolean justResurrected = false;
+    private int latestDeathTick = -1;
+    private int latestFrozenTick = -1;
+    private int latestUnknownThingTick = -1;
+    private boolean justUnfrozen = false;
+    private boolean justUnknownWaked = false;
     private List<GameAction> actions;
     private List<EstimatedGameAction> estimatedActions;
     private List<EstimatedGameAction> bestActions;
@@ -222,5 +229,61 @@ public class DataStorage {
 
     public void nowHaveHaste() {
         hasHaste = true;
+    }
+
+    public int getLatestTick() {
+        return latestTick;
+    }
+
+    public void setLatestTick(int latestTick) {
+        this.latestTick = latestTick;
+    }
+
+    public boolean isJustResurrected() {
+        return justResurrected;
+    }
+
+    public void setJustResurrected(boolean justResurrected) {
+        this.justResurrected = justResurrected;
+    }
+
+    public boolean isJustUnfrozen() {
+        return justUnfrozen;
+    }
+
+    public void setJustUnfrozen(boolean justUnfrozen) {
+        this.justUnfrozen = justUnfrozen;
+    }
+
+    public int getLatestDeathTick() {
+        return latestDeathTick;
+    }
+
+    public int getLatestFrozenTick() {
+        return latestFrozenTick;
+    }
+
+    public void setLatestDeathTick(int latestDeathTick) {
+        this.latestDeathTick = latestDeathTick;
+    }
+
+    public void setLatestFrozenTick(int latestFrozenTick) {
+        this.latestFrozenTick = latestFrozenTick;
+    }
+
+    public boolean isJustUnknownWaked() {
+        return justUnknownWaked;
+    }
+
+    public void setJustUnknownWaked(boolean justUnknownWaked) {
+        this.justUnknownWaked = justUnknownWaked;
+    }
+
+    public int getLatestUnknownThingTick() {
+        return latestUnknownThingTick;
+    }
+
+    public void setLatestUnknownThingTick(int latestUnknownThingTick) {
+        this.latestUnknownThingTick = latestUnknownThingTick;
     }
 }
