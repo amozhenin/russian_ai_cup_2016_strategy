@@ -88,6 +88,15 @@ public class MyStrategy implements IExtendedStrategy {
             storage.setZoneMapper(mapper);
             Random random = new Random(game.getRandomSeed());
             storage.setRandom(random);
+            if (!game.isSkillsEnabled()) {
+                storage.setGameType(GameType.NO_SKILLS);
+            } else {
+                if (game.isRawMessagesEnabled()) {
+                    storage.setGameType(GameType.FINAL);
+                } else {
+                    storage.setGameType(GameType.SKILLS);
+                }
+            }
         }
 
         int tick = world.getTickIndex();

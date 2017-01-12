@@ -95,7 +95,8 @@ public class LoggerStrategy  implements IExtendedStrategy {
     }
 
     private void logGameInfo(StringBuilder sb, Game game) {
-        sb.append("===Game===\n").append("Skills enabled = ").append(game.isSkillsEnabled());
+        sb.append("===Game===\n").append("GameType = ").append(storage.getGameType());
+        sb.append(", Skills enabled = ").append(game.isSkillsEnabled());
         sb.append(", Messages enabled = ").append(game.isRawMessagesEnabled());
         sb.append(", Seed = ").append(game.getRandomSeed());
         sb.append(", Ticks = ").append(game.getTickCount());

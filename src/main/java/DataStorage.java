@@ -14,6 +14,7 @@ public class DataStorage {
     //Immutable data below
     private ZoneMapper mapper;
     private Random random;
+    private GameType gameType;
 
     //Mutable data below
     private Lane lane;
@@ -285,5 +286,13 @@ public class DataStorage {
 
     public void setLatestUnknownThingTick(int latestUnknownThingTick) {
         this.latestUnknownThingTick = latestUnknownThingTick;
+    }
+
+    public GameType getGameType() {
+        return gameType;
+    }
+
+    public void setGameType(GameType gameType) {
+        this.gameType = gameType;
     }
 }
