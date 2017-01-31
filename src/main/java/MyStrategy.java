@@ -271,21 +271,27 @@ public class MyStrategy implements IExtendedStrategy {
                                 LaneType type = action.getGameTarget().getLane().getType();
                                 switch (type) {
                                     case MIDDLE:
-                                        if (self.getX() + self.getY() == game.getMapSize()) {
+                                        if (storage.getGameType() == GameType.FINAL) {
+                                            estimation = 10.0;
+                                        } else if (self.getX() + self.getY() == game.getMapSize()) {
                                             estimation = 10.0;
                                         } else {
                                             estimation = -50.0;
                                         }
                                         break;
                                     case TOP:
-                                        if (self.getX() + self.getY() < game.getMapSize()) {
+                                         if (storage.getGameType() == GameType.FINAL) {
+                                            estimation = -50.0;
+                                        } else if (self.getX() + self.getY() < game.getMapSize()) {
                                             estimation = 10.0;
                                         } else {
                                             estimation = -50.0;
                                         }
                                         break;
                                     case BOTTOM:
-                                        if (self.getX() + self.getY() > game.getMapSize()) {
+                                        if (storage.getGameType() == GameType.FINAL) {
+                                            estimation = -50.0;
+                                        } else if (self.getX() + self.getY() > game.getMapSize()) {
                                             estimation = 10.0;
                                         } else {
                                             estimation = -50.0;
@@ -294,84 +300,120 @@ public class MyStrategy implements IExtendedStrategy {
                                 }
                             }
                         } else {
+                            double hpFactor = (self.getLife() * 1.0) / self.getMaxLife();
+                            int potentialAttackers = 0;
+                            int potentialTargets = 0;
+                            for (LivingUnit foe : storage.getFoes()) {
+                                double dist = self.getDistanceTo(foe);
+                                double notSafeDist = getMaxNotSafeDistance(self, foe, game);
+                                if (dist <= notSafeDist) {
+                                    potentialAttackers++;
+                                }
+                                if (dist <= self.getCastRange() + foe.getRadius()) {
+                                    potentialTargets++;
+                                }
+                            }
                             if (storage.getLane().getType() != action.getGameTarget().getLane().getType()) {
                                 estimation = -50.0;
                             } else {
-                                estimation = 1.0;
-                                if (self.getLife() <= self.getMaxLife() * 0.7)
-                                    estimation -= 0.3;
-                                if (self.getLife() <= self.getMaxLife() * 0.4)
-                                    estimation -= 0.2;
-                                if (self.getLife() <= self.getMaxLife() * 0.2)
-                                    estimation -= 0.2;
-//                                double closestDist = getDistanceToClosestFoe(self);
-//                                if (closestDist > game.getScoreGainRange()) {
-//                                    estimation += 5.0;
-//                                }
-                                    for (LivingUnit foe : storage.getFoes()) {
-//                                    if (foe.getFaction() == Faction.NEUTRAL) {
-//                                        continue;
-//                                    }
-                                        double dist = self.getDistanceTo(foe);
-                                        if (dist > game.getScoreGainRange() + 3 * self.getRadius()) {
-                                            continue;
-                                        }
-                                        double notSafeDist = getMaxNotSafeDistance(self, foe, game);
-                                        if (dist > notSafeDist + 5) {
-                                            estimation += 0.01;
-                                        } else {
-                                            double dangerFactor = 0.0;
-                                            if (foe instanceof Wizard) {
-                                                Wizard wz = (Wizard) foe;
-                                                dangerFactor = 2.0;
-                                                if (wz.getXp() > self.getXp()) {
-                                                    dangerFactor += 1.0;
-                                                }
-                                                if (wz.getXp() > self.getXp() * 1.2) {
-                                                    dangerFactor += 2.0;
-                                                }
-                                                if (wz.getCastRange() > self.getCastRange()) {
-                                                    dangerFactor += 2.0;
-                                                }
-                                                if (hasSkill(wz, SkillType.FIREBALL, game)) {
-                                                    dangerFactor += 1.0;
-                                                }
-                                                if (hasSkill(wz, SkillType.FROST_BOLT, game)) {
-                                                    dangerFactor += 1.0;
-                                                }
-                                                if (hasSkill(wz, SkillType.SHIELD, game)) {
-                                                    dangerFactor += 1.0;
-                                                }
-                                                if (hasSkill(wz, SkillType.HASTE, game)) {
-                                                    dangerFactor += 1.0;
-                                                }
-                                                if (wz.getXp() * 1.2 < self.getXp()) {
-                                                    dangerFactor -= 1.0;
-                                                }
-                                            } else if (foe instanceof Building) {
-                                                Building bld = (Building) foe;
-                                                dangerFactor = bld.getDamage() * (bld.getCooldownTicks() - bld.getRemainingActionCooldownTicks()) / bld.getCooldownTicks() / game.getMagicMissileDirectDamage();
-                                            } else if (foe instanceof Minion) {
-                                                dangerFactor = 1.0;
-                                            }
-                                            if (self.getLife() <= 50 || self.getLife() <= 0.4 * self.getMaxLife()) {
-                                                dangerFactor += 2.0;
-                                            }
-                                            estimation -= dangerFactor * 0.1;
-                                        }
-
-//                                for (LivingUnit friend : storage.getFriends()) {
-//                                    double dist = self.getDistanceTo(friend);
-//                                    if (dist > game.getScoreGainRange() + 3 * self.getRadius()) {
-//                                        continue;
-//                                    }
-//                                    if (dist > 300) {
-//                                        estimation += 0.01;
-//                                    } else {
-//                                        estimation += 0.03;
-//                                    }
-//                                }
+                                if (potentialAttackers >= 2) {
+                                    if (hpFactor <= 0.6) {
+                                        estimation = 0.1;
+                                    } else if (potentialTargets < 5) {
+                                        estimation = hpFactor + 0.1;
+                                    } else {
+                                        estimation = 0.1;
+                                    }
+                                } else if (potentialAttackers == 1) {
+                                    if (hpFactor <= 0.6) {
+                                        estimation = 0.3;
+                                    } else if (potentialTargets < 3) {
+                                        estimation = hpFactor + 0.1;
+                                    } else {
+                                        estimation = hpFactor / 2 + 0.1;
+                                    }
+                                } else {
+                                    if (potentialTargets > 0) {
+                                        estimation = 0.1; //HOLD
+                                    } else {
+                                        estimation = 1.0;
+                                    }
                                 }
+//                                estimation = 1.0;
+//                                if (self.getLife() <= self.getMaxLife() * 0.7)
+//                                    estimation -= 0.3;
+//                                if (self.getLife() <= self.getMaxLife() * 0.4)
+//                                    estimation -= 0.2;
+//                                if (self.getLife() <= self.getMaxLife() * 0.2)
+//                                    estimation -= 0.2;
+////                                double closestDist = getDistanceToClosestFoe(self);
+////                                if (closestDist > game.getScoreGainRange()) {
+////                                    estimation += 5.0;
+////                                }
+//                                    for (LivingUnit foe : storage.getFoes()) {
+////                                    if (foe.getFaction() == Faction.NEUTRAL) {
+////                                        continue;
+////                                    }
+//                                        double dist = self.getDistanceTo(foe);
+//                                        if (dist > game.getScoreGainRange() + 3 * self.getRadius()) {
+//                                            continue;
+//                                        }
+//                                        double notSafeDist = getMaxNotSafeDistance(self, foe, game);
+//                                        if (dist > notSafeDist + 5) {
+//                                            estimation += 0.01;
+//                                        } else {
+//                                            double dangerFactor = 0.0;
+//                                            if (foe instanceof Wizard) {
+//                                                Wizard wz = (Wizard) foe;
+//                                                dangerFactor = 2.0;
+//                                                if (wz.getXp() > self.getXp()) {
+//                                                    dangerFactor += 1.0;
+//                                                }
+//                                                if (wz.getXp() > self.getXp() * 1.2) {
+//                                                    dangerFactor += 2.0;
+//                                                }
+//                                                if (wz.getCastRange() > self.getCastRange()) {
+//                                                    dangerFactor += 2.0;
+//                                                }
+//                                                if (hasSkill(wz, SkillType.FIREBALL, game)) {
+//                                                    dangerFactor += 1.0;
+//                                                }
+//                                                if (hasSkill(wz, SkillType.FROST_BOLT, game)) {
+//                                                    dangerFactor += 1.0;
+//                                                }
+//                                                if (hasSkill(wz, SkillType.SHIELD, game)) {
+//                                                    dangerFactor += 1.0;
+//                                                }
+//                                                if (hasSkill(wz, SkillType.HASTE, game)) {
+//                                                    dangerFactor += 1.0;
+//                                                }
+//                                                if (wz.getXp() * 1.2 < self.getXp()) {
+//                                                    dangerFactor -= 1.0;
+//                                                }
+//                                            } else if (foe instanceof Building) {
+//                                                Building bld = (Building) foe;
+//                                                dangerFactor = bld.getDamage() * (bld.getCooldownTicks() - bld.getRemainingActionCooldownTicks()) / bld.getCooldownTicks() / game.getMagicMissileDirectDamage();
+//                                            } else if (foe instanceof Minion) {
+//                                                dangerFactor = 1.0;
+//                                            }
+//                                            if (self.getLife() <= 50 || self.getLife() <= 0.4 * self.getMaxLife()) {
+//                                                dangerFactor += 2.0;
+//                                            }
+//                                            estimation -= dangerFactor * 0.1;
+//                                        }
+//
+////                                for (LivingUnit friend : storage.getFriends()) {
+////                                    double dist = self.getDistanceTo(friend);
+////                                    if (dist > game.getScoreGainRange() + 3 * self.getRadius()) {
+////                                        continue;
+////                                    }
+////                                    if (dist > 300) {
+////                                        estimation += 0.01;
+////                                    } else {
+////                                        estimation += 0.03;
+////                                    }
+////                                }
+//                                }
                             }
                         }
                         break;
@@ -390,169 +432,254 @@ public class MyStrategy implements IExtendedStrategy {
                 }
                 break;
             case HOLD:
-                if (storage.getLane().getType() != action.getGameTarget().getLane().getType()) {
-                    estimation = -50.0;
-                } else {
-                    estimation = 0.5;
-                    if (self.getLife() < self.getMaxLife() && self.getLife() > self.getMaxLife() * 0.6) {
-                        estimation += 0.3;
+                {
+                    double hpFactor = (self.getLife() * 1.0) / self.getMaxLife();
+                    int potentialAttackers = 0;
+                    int potentialTargets = 0;
+                    for (LivingUnit foe : storage.getFoes()) {
+                        double dist = self.getDistanceTo(foe);
+                        double notSafeDist = getMaxNotSafeDistance(self, foe, game);
+                        if (dist <= notSafeDist) {
+                            potentialAttackers++;
+                        }
+                        if (dist <= self.getCastRange() + foe.getRadius()) {
+                            potentialTargets++;
+                        }
                     }
-                    if (self.getLife() < self.getMaxLife() * 0.4) {
-                        estimation -= 0.1;
-                    }
-//                    double closestDist = getDistanceToClosestFoe(self);
-//                    if (closestDist > game.getScoreGainRange()) {
-//                        estimation -= 5.0;
-//                    }
-                        for (LivingUnit foe : storage.getFoes()) {
-//                        if (foe.getFaction() == Faction.NEUTRAL) {
-//                            continue;
-//                        }
-                            double dist = self.getDistanceTo(foe);
-                            if (dist > game.getScoreGainRange() + 3 * self.getRadius()) {
-                                continue;
-                            }
-                            double notSafeDist = getMaxNotSafeDistance(self, foe, game);
-                            if (dist > notSafeDist + 5) {
-                                estimation += 0.03;
+                    if (storage.getLane().getType() != action.getGameTarget().getLane().getType()) {
+                        estimation = -50.0;
+                    } else {
+                        if (potentialAttackers >= 2) {
+                            if (hpFactor <= 0.6) {
+                                estimation = 0.05;
+                            } else if (potentialTargets > 0) {
+                                estimation = hpFactor;
                             } else {
-                                double dangerFactor = 0.0;
-                                if (foe instanceof Wizard) {
-                                    Wizard wz = (Wizard) foe;
-                                    dangerFactor = 2.0;
-                                    if (wz.getXp() > self.getXp()) {
-                                        dangerFactor += 1.0;
-                                    }
-                                    if (wz.getXp() > self.getXp() * 1.2) {
-                                        dangerFactor += 2.0;
-                                    }
-                                    if (wz.getCastRange() > self.getCastRange()) {
-                                        dangerFactor += 2.0;
-                                    }
-                                    if (hasSkill(wz, SkillType.FIREBALL, game)) {
-                                        dangerFactor += 1.0;
-                                    }
-                                    if (hasSkill(wz, SkillType.FROST_BOLT, game)) {
-                                        dangerFactor += 1.0;
-                                    }
-                                    if (hasSkill(wz, SkillType.SHIELD, game)) {
-                                        dangerFactor += 1.0;
-                                    }
-                                    if (hasSkill(wz, SkillType.HASTE, game)) {
-                                        dangerFactor += 1.0;
-                                    }
-                                    if (wz.getXp() * 1.2 < self.getXp()) {
-                                        dangerFactor -= 1.0;
-                                    }
-                                } else if (foe instanceof Building) {
-                                    Building bld = (Building) foe;
-                                    dangerFactor = bld.getDamage() * (bld.getCooldownTicks() - bld.getRemainingActionCooldownTicks()) / bld.getCooldownTicks() / game.getMagicMissileDirectDamage();
-                                } else if (foe instanceof Minion) {
-                                    dangerFactor = 1.0;
-                                }
-                                if (self.getLife() <= 50 || self.getLife() <= 0.4 * self.getMaxLife()) {
-                                    dangerFactor += 2.0;
-                                }
-                                estimation -= dangerFactor * 0.1;
+                                estimation = 0.05;
                             }
-
-//                    for (LivingUnit friend : storage.getFriends()) {
-//                        double dist = self.getDistanceTo(friend);
-//                        if (dist > game.getScoreGainRange() + 3 * self.getRadius()) {
-//                            continue;
+                        } else if (potentialAttackers == 1) {
+                            if (hpFactor <= 0.6) {
+                                estimation = 0.4;
+                            } else if (potentialTargets > 0) {
+                                estimation = hpFactor + 0.2;
+                            } else {
+                                estimation = hpFactor / 2;
+                            }
+                        } else {
+                            if (potentialTargets > 0) {
+                                estimation = 1.0; //HOLD
+                            } else {
+                                estimation = 0.1;
+                            }
+                        }
+//                        estimation = 0.5;
+//                        if (self.getLife() < self.getMaxLife() && self.getLife() > self.getMaxLife() * 0.6) {
+//                            estimation += 0.3;
 //                        }
-//                        if (dist > 300) {
-//                            estimation += 0.01;
-//                        } else {
-//                            estimation += 0.02;
+//                        if (self.getLife() < self.getMaxLife() * 0.4) {
+//                            estimation -= 0.1;
 //                        }
+////                    double closestDist = getDistanceToClosestFoe(self);
+////                    if (closestDist > game.getScoreGainRange()) {
+////                        estimation -= 5.0;
+////                    }
+//                        for (LivingUnit foe : storage.getFoes()) {
+////                        if (foe.getFaction() == Faction.NEUTRAL) {
+////                            continue;
+////                        }
+//                            double dist = self.getDistanceTo(foe);
+//                            if (dist > game.getScoreGainRange() + 3 * self.getRadius()) {
+//                                continue;
+//                            }
+//                            double notSafeDist = getMaxNotSafeDistance(self, foe, game);
+//                            if (dist > notSafeDist + 5) {
+//                                estimation += 0.03;
+//                            } else {
+//                                double dangerFactor = 0.0;
+//                                if (foe instanceof Wizard) {
+//                                    Wizard wz = (Wizard) foe;
+//                                    dangerFactor = 2.0;
+//                                    if (wz.getXp() > self.getXp()) {
+//                                        dangerFactor += 1.0;
+//                                    }
+//                                    if (wz.getXp() > self.getXp() * 1.2) {
+//                                        dangerFactor += 2.0;
+//                                    }
+//                                    if (wz.getCastRange() > self.getCastRange()) {
+//                                        dangerFactor += 2.0;
+//                                    }
+//                                    if (hasSkill(wz, SkillType.FIREBALL, game)) {
+//                                        dangerFactor += 1.0;
+//                                    }
+//                                    if (hasSkill(wz, SkillType.FROST_BOLT, game)) {
+//                                        dangerFactor += 1.0;
+//                                    }
+//                                    if (hasSkill(wz, SkillType.SHIELD, game)) {
+//                                        dangerFactor += 1.0;
+//                                    }
+//                                    if (hasSkill(wz, SkillType.HASTE, game)) {
+//                                        dangerFactor += 1.0;
+//                                    }
+//                                    if (wz.getXp() * 1.2 < self.getXp()) {
+//                                        dangerFactor -= 1.0;
+//                                    }
+//                                } else if (foe instanceof Building) {
+//                                        Building bld = (Building) foe;
+//                                    dangerFactor = bld.getDamage() * (bld.getCooldownTicks() - bld.getRemainingActionCooldownTicks()) / bld.getCooldownTicks() / game.getMagicMissileDirectDamage();
+//                                } else if (foe instanceof Minion) {
+//                                    dangerFactor = 1.0;
+//                                }
+//                                if (self.getLife() <= 50 || self.getLife() <= 0.4 * self.getMaxLife()) {
+//                                    dangerFactor += 2.0;
+//                                }
+//                                estimation -= dangerFactor * 0.1;
+//                            }
+//
+////                    for (LivingUnit friend : storage.getFriends()) {
+////                        double dist = self.getDistanceTo(friend);
+////                        if (dist > game.getScoreGainRange() + 3 * self.getRadius()) {
+////                            continue;
+////                        }
+////                        if (dist > 300) {
+////                            estimation += 0.01;
+////                        } else {
+////                            estimation += 0.02;
+////                        }
+////                    }
 //                    }
                     }
                 }
                 break;
             case RETREAT:
-                if (storage.getLane().getType() != action.getGameTarget().getLane().getType()) {
-                    estimation = -50.0;
-                } else {
-                    estimation = 0.0;
-                    if (self.getLife() < self.getMaxLife() * 0.9)
-                        estimation += 0.1;
-                    if (self.getLife() < self.getMaxLife() * 0.8)
-                        estimation += 0.2;
-                    if (self.getLife() < self.getMaxLife() * 0.6)
-                        estimation += 0.3;
-                    if (self.getLife() < self.getMaxLife() * 0.4)
-                        estimation += 0.2;
-                    if (self.getLife() < self.getMaxLife() * 0.2)
-                        estimation += 0.2;
-//                    double closestDist = getDistanceToClosestFoe(self);
-//                    if (closestDist > game.getScoreGainRange()) {
-//                        estimation -= 5.0;
-//                    }
-                        for (LivingUnit foe : storage.getFoes()) {
-//                        if (foe.getFaction() == Faction.NEUTRAL) {
-//                            continue;
-//                        }
-                            double dist = self.getDistanceTo(foe);
-                            if (dist > game.getScoreGainRange() + 3 * self.getRadius()) {
-                                continue;
-                            }
-                            double notSafeDist = getMaxNotSafeDistance(self, foe, game);
-                            if (dist > notSafeDist + 5) {
-                                //estimation -= 0.1;
-                            } else {
-                                double dangerFactor = 0.0;
-                                if (foe instanceof Wizard) {
-                                    Wizard wz = (Wizard) foe;
-                                    dangerFactor = 2.0;
-                                    if (wz.getXp() > self.getXp()) {
-                                        dangerFactor += 1.0;
-                                    }
-                                    if (wz.getXp() > self.getXp() * 1.2) {
-                                        dangerFactor += 2.0;
-                                    }
-                                    if (wz.getCastRange() > self.getCastRange()) {
-                                        dangerFactor += 2.0;
-                                    }
-                                    if (hasSkill(wz, SkillType.FIREBALL, game)) {
-                                        dangerFactor += 1.0;
-                                    }
-                                    if (hasSkill(wz, SkillType.FROST_BOLT, game)) {
-                                        dangerFactor += 1.0;
-                                    }
-                                    if (hasSkill(wz, SkillType.SHIELD, game)) {
-                                        dangerFactor += 1.0;
-                                    }
-                                    if (hasSkill(wz, SkillType.HASTE, game)) {
-                                        dangerFactor += 1.0;
-                                    }
-                                    if (wz.getXp() * 1.2 < self.getXp()) {
-                                        dangerFactor -= 1.0;
-                                    }
-                                } else if (foe instanceof Building) {
-                                    Building bld = (Building) foe;
-                                    dangerFactor = bld.getDamage() * (bld.getCooldownTicks() - bld.getRemainingActionCooldownTicks()) / bld.getCooldownTicks() / game.getMagicMissileDirectDamage();
-                                } else if (foe instanceof Minion) {
-                                    dangerFactor = 1.0;
-                                }
-                                if (self.getLife() <= 50 || self.getLife() <= 0.4 * self.getMaxLife()) {
-                                    dangerFactor += 2.0;
-                                }
-                                estimation += dangerFactor * 0.1;
-                            }
-
-//                    for (LivingUnit friend : storage.getFriends()) {
-//                        double dist = self.getDistanceTo(friend);
-//                        if (dist > game.getScoreGainRange() + 3 * self.getRadius()) {
-//                            continue;
-//                        }
-//                        if (dist > 300) {
-//                            estimation -= 0.02;
-//                        } else {
-//                            estimation -= 0.04;
-//                        }
-//                    }
+                {
+                    double hpFactor = (self.getLife() * 1.0) / self.getMaxLife();
+                    int potentialAttackers = 0;
+                    int potentialTargets = 0;
+                    for (LivingUnit foe : storage.getFoes()) {
+                        double dist = self.getDistanceTo(foe);
+                        double notSafeDist = getMaxNotSafeDistance(self, foe, game);
+                        if (dist <= notSafeDist) {
+                            potentialAttackers++;
+                        }
+                        if (dist <= self.getCastRange() + foe.getRadius()) {
+                            potentialTargets++;
+                        }
                     }
+                    if (storage.getLane().getType() != action.getGameTarget().getLane().getType()) {
+                        estimation = -50.0;
+                    } else {
+                        if (potentialAttackers >= 2) {
+                            if (hpFactor <= 0.2) {
+                                estimation = 5.0;
+                            } else if (hpFactor <= 0.4) {
+                                estimation = 2.0;
+                            } else if (hpFactor <= 0.6) {
+                                estimation = 1.5 - hpFactor;
+                            } else if (potentialTargets < 5) {
+                                estimation = 1 - hpFactor;
+                            } else {
+                                estimation = 1 - hpFactor;
+                            }
+                        } else if (potentialAttackers == 1) {
+                            if (hpFactor <= 0.2) {
+                                estimation = 2.0;
+                            } else if (hpFactor <= 0.4) {
+                                estimation = 1.5 - hpFactor;
+                            } else if (hpFactor <= 0.6) {
+                                estimation = 1.2 - hpFactor;
+                            } else if (potentialTargets < 3) {
+                                estimation = 1 - hpFactor;
+                            } else {
+                                estimation = 1 - hpFactor;
+                            }
+                        } else {
+                            if (potentialTargets > 0) {
+                                estimation = 0.1; //HOLD
+                            } else {
+                                estimation = 0.1;
+                            }
+                        }
+//                        estimation = 0.0;
+//                        if (self.getLife() < self.getMaxLife() * 0.9)
+//                            estimation += 0.1;
+//                        if (self.getLife() < self.getMaxLife() * 0.8)
+//                            estimation += 0.2;
+//                        if (self.getLife() < self.getMaxLife() * 0.6)
+//                            estimation += 0.3;
+//                        if (self.getLife() < self.getMaxLife() * 0.4)
+//                            estimation += 0.2;
+//                        if (self.getLife() < self.getMaxLife() * 0.2)
+//                            estimation += 0.2;
+////                    double closestDist = getDistanceToClosestFoe(self);
+////                    if (closestDist > game.getScoreGainRange()) {
+////                        estimation -= 5.0;
+////                    }
+//                        for (LivingUnit foe : storage.getFoes()) {
+////                        if (foe.getFaction() == Faction.NEUTRAL) {
+////                            continue;
+////                        }
+//                            double dist = self.getDistanceTo(foe);
+//                            if (dist > game.getScoreGainRange() + 3 * self.getRadius()) {
+//                                continue;
+//                            }
+//                            double notSafeDist = getMaxNotSafeDistance(self, foe, game);
+//                            if (dist > notSafeDist + 5) {
+//                                //estimation -= 0.1;
+//                            } else {
+//                                double dangerFactor = 0.0;
+//                                if (foe instanceof Wizard) {
+//                                    Wizard wz = (Wizard) foe;
+//                                    dangerFactor = 2.0;
+//                                    if (wz.getXp() > self.getXp()) {
+//                                        dangerFactor += 1.0;
+//                                    }
+//                                    if (wz.getXp() > self.getXp() * 1.2) {
+//                                        dangerFactor += 2.0;
+//                                    }
+//                                    if (wz.getCastRange() > self.getCastRange()) {
+//                                        dangerFactor += 2.0;
+//                                    }
+//                                    if (hasSkill(wz, SkillType.FIREBALL, game)) {
+//                                        dangerFactor += 1.0;
+//                                    }
+//                                    if (hasSkill(wz, SkillType.FROST_BOLT, game)) {
+//                                        dangerFactor += 1.0;
+//                                    }
+//                                    if (hasSkill(wz, SkillType.SHIELD, game)) {
+//                                        dangerFactor += 1.0;
+//                                    }
+//                                    if (hasSkill(wz, SkillType.HASTE, game)) {
+//                                        dangerFactor += 1.0;
+//                                    }
+//                                    if (wz.getXp() * 1.2 < self.getXp()) {
+//                                        dangerFactor -= 1.0;
+//                                    }
+//                                } else if (foe instanceof Building) {
+//                                    Building bld = (Building) foe;
+//                                    dangerFactor = bld.getDamage() * (bld.getCooldownTicks() - bld.getRemainingActionCooldownTicks()) / bld.getCooldownTicks() / game.getMagicMissileDirectDamage();
+//                                } else if (foe instanceof Minion) {
+//                                    dangerFactor = 1.0;
+//                                }
+//                                if (self.getLife() <= 50 || self.getLife() <= 0.4 * self.getMaxLife()) {
+//                                    dangerFactor += 2.0;
+//                                }
+//                                estimation += dangerFactor * 0.1;
+//                            }
+//
+////                    for (LivingUnit friend : storage.getFriends()) {
+////                        double dist = self.getDistanceTo(friend);
+////                        if (dist > game.getScoreGainRange() + 3 * self.getRadius()) {
+////                            continue;
+////                        }
+////                        if (dist > 300) {
+////                            estimation -= 0.02;
+////                        } else {
+////                            estimation -= 0.04;
+////                        }
+////                    }
+//                        }
+                    }
+
                 }
                 break;
             case CAST_SPELL:
